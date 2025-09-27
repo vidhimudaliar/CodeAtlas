@@ -8,17 +8,24 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      height: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden"
+    }}>
       {/* Side navbar - now fixed */}
       <NavbarMinimalColored />
 
       {/* Main content area with left margin for fixed sidebar */}
-      <div style={{ 
-        flex: 1, 
-        padding: "2rem", 
-        maxWidth: "800px", 
-        margin: "0 auto",
-        marginLeft: "80px" // Account for fixed sidebar width
+      <div style={{
+        flex: 1,
+        padding: "1.5rem",
+        width: "calc(100% - 80px)",
+        backgroundColor: "#F5F5F5",
+        marginLeft: "80px", // Account for fixed sidebar width
+        overflow: "auto",
+        boxSizing: "border-box"
       }}>
         {children}
       </div>
