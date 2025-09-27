@@ -1,151 +1,151 @@
+"use client";
+
 export default function Projects() {
+    const projects = [
+        {
+            name: 'Shellhacks',
+            visibility: 'Public',
+            lastUpdated: '9/27/2025 10:33 AM'
+        },
+        {
+            name: 'desi-discipline',
+            visibility: 'Public',
+            lastUpdated: '4/13/2025 11:49 AM'
+        },
+        {
+            name: 'DeepVisor',
+            visibility: 'Public',
+            lastUpdated: '3/5/2025 9:24 PM'
+        },
+        {
+            name: 'portfolio-website',
+            visibility: 'Private',
+            lastUpdated: '1/20/2025 5:30 PM'
+        },
+        {
+            name: 'good-project',
+            visibility: 'Public',
+            lastUpdated: '12/9/2024 6:40 PM'
+        },
+        {
+            name: 'top-secret',
+            visibility: 'Private',
+            lastUpdated: '11/3/2024 12:19 AM'
+        },
+        {
+            name: 'fun-project',
+            visibility: 'Public',
+            lastUpdated: '3/5/2025 9:24 PM'
+        }
+    ];
+
     return (
-        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ color: '#495B69', margin: '0', fontSize: '2rem' }}>Projects</h1>
-                <button style={{
-                    backgroundColor: '#AAD9DF',
+        <div style={{
+            padding: '2rem',
+            width: '100%',
+            backgroundColor: 'white',
+            minHeight: '100vh'
+        }}>
+            {/* Header */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem'
+            }}>
+                <h1 style={{
                     color: '#495B69',
+                    margin: '0',
+                    fontSize: '2rem',
+                    fontWeight: '600'
+                }}>
+                    Your Projects
+                </h1>
+                <button style={{
+                    backgroundColor: '#495B69',
+                    color: '#FFFFFF',
                     border: 'none',
                     padding: '0.75rem 1.5rem',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    fontSize: '1rem'
                 }}>
-                    + New Project
+                    Create a Project
                 </button>
             </div>
 
-            {/* Projects Grid */}
+            {/* Projects List */}
             <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-                gap: '1.5rem'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
             }}>
-                {[
-                    {
-                        name: 'E-commerce Platform',
-                        description: 'A full-stack e-commerce application built with React and Node.js',
-                        status: 'In Progress',
-                        technologies: ['React', 'Node.js', 'MongoDB'],
-                        lastUpdated: '2 hours ago'
-                    },
-                    {
-                        name: 'Portfolio Website',
-                        description: 'Personal portfolio website showcasing projects and skills',
-                        status: 'Completed',
-                        technologies: ['Next.js', 'TypeScript', 'Tailwind CSS'],
-                        lastUpdated: '1 day ago'
-                    },
-                    {
-                        name: 'Task Management App',
-                        description: 'Collaborative task management tool for teams',
-                        status: 'Planning',
-                        technologies: ['React', 'Express', 'PostgreSQL'],
-                        lastUpdated: '3 days ago'
-                    },
-                    {
-                        name: 'Weather Dashboard',
-                        description: 'Real-time weather information dashboard with charts',
-                        status: 'In Progress',
-                        technologies: ['Vue.js', 'Chart.js', 'OpenWeather API'],
-                        lastUpdated: '1 week ago'
-                    },
-                    {
-                        name: 'Social Media Analytics',
-                        description: 'Analytics dashboard for social media metrics',
-                        status: 'Completed',
-                        technologies: ['React', 'D3.js', 'Python'],
-                        lastUpdated: '2 weeks ago'
-                    },
-                    {
-                        name: 'Mobile Banking App',
-                        description: 'Secure mobile banking application with biometric authentication',
-                        status: 'In Progress',
-                        technologies: ['React Native', 'Node.js', 'MySQL'],
-                        lastUpdated: '3 weeks ago'
-                    }
-                ].map((project, index) => (
+                {projects.map((project, index) => (
                     <div key={index} style={{
-                        backgroundColor: 'white',
-                        padding: '1.5rem',
-                        borderRadius: '12px',
-                        border: '1px solid #e9ecef',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s ease',
-                        cursor: 'pointer'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                            <h3 style={{ color: '#495B69', margin: '0', fontSize: '1.25rem' }}>{project.name}</h3>
-                            <span style={{
-                                backgroundColor: project.status === 'Completed' ? '#d4edda' :
-                                    project.status === 'In Progress' ? '#fff3cd' : '#e2e3e5',
-                                color: project.status === 'Completed' ? '#155724' :
-                                    project.status === 'In Progress' ? '#856404' : '#6c757d',
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '16px',
-                                fontSize: '0.75rem',
-                                fontWeight: '500'
-                            }}>
-                                {project.status}
-                            </span>
-                        </div>
-
-                        <p style={{ color: '#6c757d', margin: '0 0 1rem 0', lineHeight: '1.5' }}>
-                            {project.description}
-                        </p>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                {project.technologies.map((tech, techIndex) => (
-                                    <span key={techIndex} style={{
-                                        backgroundColor: '#AAD9DF',
-                                        color: '#495B69',
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '16px',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '500'
-                                    }}>
-                                        {tech}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem 0',
+                        borderBottom: '1px solid #e9ecef',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s ease'
+                    }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        {/* Left side - Icon and project name */}
                         <div style={{
                             display: 'flex',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            paddingTop: '1rem',
-                            borderTop: '1px solid #e9ecef'
+                            gap: '1rem',
+                            flex: 1
                         }}>
-                            <span style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                                Updated {project.lastUpdated}
-                            </span>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button style={{
-                                    backgroundColor: 'transparent',
-                                    color: '#495B69',
-                                    border: '1px solid #AAD9DF',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem'
-                                }}>
-                                    View
-                                </button>
-                                <button style={{
-                                    backgroundColor: '#AAD9DF',
-                                    color: '#495B69',
-                                    border: 'none',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem'
-                                }}>
-                                    Edit
-                                </button>
+                            <div style={{
+                                width: '20px',
+                                height: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2.5 4.5C2.5 3.67157 3.17157 3 4 3H7.5L9 4.5H12C12.8284 4.5 13.5 5.17157 13.5 6V12.5C13.5 13.3284 12.8284 14 12 14H4C3.17157 14 2.5 13.3284 2.5 12.5V4.5Z" stroke="#495B69" strokeWidth="1.5" fill="none" />
+                                </svg>
                             </div>
+                            <span style={{
+                                color: '#495B69',
+                                fontSize: '1rem',
+                                fontWeight: '500'
+                            }}>
+                                {project.name}
+                            </span>
+                        </div>
+
+                        {/* Right side - Visibility and last updated */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '2rem'
+                        }}>
+                            {/* Visibility Badge */}
+                            <span style={{
+                                backgroundColor: '#AAD9DF',
+                                color: '#495B69',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '12px',
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                            }}>
+                                {project.visibility}
+                            </span>
+
+                            {/* Last Updated */}
+                            <span style={{
+                                color: '#6c757d',
+                                fontSize: '0.875rem'
+                            }}>
+                                Last updated on {project.lastUpdated}
+                            </span>
                         </div>
                     </div>
                 ))}
