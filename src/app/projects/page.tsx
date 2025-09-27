@@ -93,6 +93,7 @@ export default function Projects() {
                     }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        onClick={() => window.location.href = `/projects/${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}`}
                     >
                         {/* Left side - Icon and project name */}
                         <div style={{
