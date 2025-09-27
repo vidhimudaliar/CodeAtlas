@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import ProjectIdeaForm from '@/components/ProjectIdeaForm';
 
 interface Project {
     id: number;
@@ -14,6 +15,7 @@ export default function Dashboard() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showProjectForm, setShowProjectForm] = useState(false);
 
     useEffect(() => {
         fetchProjects();
@@ -82,19 +84,23 @@ export default function Dashboard() {
                         }}>
                             Your Projects
                         </h2>
-                        <button style={{
-                            backgroundColor: '#495B69',
-                            color: '#FFFFFF',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '6px',
-                            fontSize: '1rem',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}>
-                            Create a Project
-                        </button>
+                        {projects.length > 0 && (
+                            <button
+                                onClick={() => setShowProjectForm(true)}
+                                style={{
+                                    backgroundColor: '#495B69',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '6px',
+                                    fontSize: '1rem',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}>
+                                Create a Project
+                            </button>
+                        )}
                     </div>
 
                     {loading ? (
@@ -226,17 +232,19 @@ export default function Dashboard() {
                             }}>
                                 Create your first project
                             </p>
-                            <button style={{
-                                backgroundColor: '#495B69',
-                                color: '#FFFFFF',
-                                border: 'none',
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '8px',
-                                fontSize: '0.9rem',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                            }}>
+                            <button
+                                onClick={() => setShowProjectForm(true)}
+                                style={{
+                                    backgroundColor: '#495B69',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    padding: '0.6rem 1.2rem',
+                                    borderRadius: '8px',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}>
                                 Create a Project
                             </button>
                         </div>
@@ -302,6 +310,77 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Project Form Modal */}
+            {showProjectForm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: '#AAD9DF',
+                        borderRadius: '16px',
+                        padding: '0',
+                        maxWidth: '500px',
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflow: 'auto',
+                        position: 'relative'
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            backgroundColor: '#AAD9DF',
+                            padding: '1.5rem 2rem 1rem 2rem',
+                            borderTopLeftRadius: '16px',
+                            borderTopRightRadius: '16px',
+                            position: 'relative'
+                        }}>
+                            <h2 style={{
+                                color: '#495B69',
+                                fontSize: '1.5rem',
+                                fontWeight: '600',
+                                margin: 0,
+                                textAlign: 'center'
+                            }}>
+                                Enter your Project Idea
+                            </h2>
+                            <button
+                                onClick={() => setShowProjectForm(false)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '1rem',
+                                    right: '1rem',
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '1.5rem',
+                                    cursor: 'pointer',
+                                    color: '#495B69'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div style={{
+                            backgroundColor: '#FFFFFF',
+                            padding: '2rem',
+                            borderBottomLeftRadius: '16px',
+                            borderBottomRightRadius: '16px'
+                        }}>
+                            <ProjectIdeaForm />
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
