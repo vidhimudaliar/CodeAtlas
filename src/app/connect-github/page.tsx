@@ -1,34 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const STATE_STORAGE_KEY = "codeatlas-gh-app-state";
-
+export function connectGitHub(options: { redirect?: boolean } = {}): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const appSlug = process.env.NEXT_PUBLIC_GH_APP_SLUG;
+  if (!appSlug) {
+    console.warn("connectGitHub called without NEXT_PUBLIC_GH_APP_SLUG configured");
+    return null;
+  }
+  let state = window.sessionStorage.getItem(STATE_STORAGE_KEY);
+  if (!state) {
+    state = window.crypto.randomUUID();
+    window.sessionStorage.setItem(STATE_STORAGE_KEY, state);
+  }
+  const target = new URL(`https://github.com/apps/${appSlug}/installations/new`);
+  target.searchParams.set("state", state);
+  const url = target.toString();
+  if (options.redirect !== false) {
+    window.location.href = url;
+  }
+  return url;
+}
 export default function ConnectGitHub() {
   const appSlug = process.env.NEXT_PUBLIC_GH_APP_SLUG;
-  const [state, setState] = useState<string | null>(null);
-
+  const [installUrl, setInstallUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    const existing = window.sessionStorage.getItem(STATE_STORAGE_KEY);
-    if (existing) {
-      setState(existing);
-      return;
-    }
-
-    const nextState = window.crypto.randomUUID();
-    window.sessionStorage.setItem(STATE_STORAGE_KEY, nextState);
-    setState(nextState);
+    const url = connectGitHub({ redirect: false });
+    setInstallUrl(url);
   }, []);
-
-  const installUrl = useMemo(() => {
-    if (!appSlug || !state) {
-      return null;
+  const handleInstall = useCallback(() => {
+    const url = connectGitHub();
+    if (!url) {
+      setError("Unable to build installation URL. Check configuration and try again.");
     }
-    const target = new URL(`https://github.com/apps/${appSlug}/installations/new`);
-    target.searchParams.set("state", state);
-    return target.toString();
-  }, [appSlug, state]);
+  }, []);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
