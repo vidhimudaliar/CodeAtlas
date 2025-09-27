@@ -34,15 +34,45 @@ if SUPABASE_URL and SUPABASE_KEY:
 # 1) Static-data tool (stub now, GET later)
 # ---------------------------
 
-def get_tasks_from_supabase() -> dict:
+def get_tasks_from_supabase(project_id: str = None) -> dict:
+    """
+    Fetch tasks (nodes) from Supabase database.
+    Returns nodes with their hierarchical relationships.
+    """
+    if supabase and project_id:
+        try:
+            # Query nodes for the project
+            nodes_response = supabase.table("nodes").select("*").eq("project_id", project_id).execute()
+            nodes = nodes_response.data if nodes_response.data else []
+            
+            # Query edges to understand parent-child relationships
+            edges_response = supabase.table("edges").select("*").eq("project_id", project_id).execute()
+            edges = edges_response.data if edges_response.data else []
+            
+            # Query relations for additional relationships
+            relations_response = supabase.table("relations").select("*").eq("project_id", project_id).execute()
+            relations = relations_response.data if relations_response.data else []
+            
+            return {
+                "tasks": nodes,
+                "edges": edges,
+                "relations": relations
+            }
+        except Exception as e:
+            print(f"Error fetching tasks from Supabase: {e}")
+            # Fallback to static data
+            pass
+    
     # Fallback static data for testing
     return {
         "tasks": [
-            {"id": "T-42", "title": "Add login button", "description": "Implement login functionality", "status": "in_progress"},
-            {"id": "T-77", "title": "Fix 500 on /signup", "description": "Resolve server error on signup page", "status": "open"},
-            {"id": "T-88", "title": "Refactor email sender", "description": "Improve email sending reliability", "status": "completed"},
-            {"id": "T-99", "title": "Add agency client component", "description": "Create new agency client interface", "status": "open"},
-        ]
+            {"node_id": "T-42", "name": "Add login button", "type": "feature", "status": "todo", "level": 2},
+            {"node_id": "T-77", "name": "Fix 500 on /signup", "type": "bug", "status": "todo", "level": 3},
+            {"node_id": "T-88", "name": "Refactor email sender", "type": "task", "status": "done", "level": 3},
+            {"node_id": "T-99", "name": "Add agency client component", "type": "feature", "status": "todo", "level": 2},
+        ],
+        "edges": [],
+        "relations": []
     }
 
 # ---------------------------
@@ -63,6 +93,22 @@ def get_webhook_commit(webhook_data: dict) -> dict:
             return commits[0]
     
     return {}
+
+def get_project_id_from_webhook(webhook_data: dict) -> str:
+    """
+    Extract project identifier from webhook data.
+    Uses repository owner/name to identify the project.
+    """
+    if webhook_data.get("event") == "push" and "payload" in webhook_data:
+        payload = webhook_data["payload"]
+        repo = payload.get("repository", {})
+        owner = repo.get("owner", {}).get("login", "")
+        repo_name = repo.get("name", "")
+        
+        if owner and repo_name:
+            return f"{owner}/{repo_name}"
+    
+    return "default-project"
 
 def get_sample_webhook_data() -> dict:
     """
@@ -143,36 +189,39 @@ def get_sample_webhook_data() -> dict:
 task_classifier = Agent(
     name="task_classifier",
     model="gemini-2.5-flash",  # fast + cheap; upgrade to pro if needed
-    description="Classifies whether a commit corresponds to a known task by analyzing GitHub webhook data against Supabase tasks.",
+    description="Classifies whether a commit corresponds to a known task by analyzing GitHub webhook data against Supabase nodes and edges.",
     instruction="""
-You are a JSON generator that analyzes a single GitHub commit against project tasks. You MUST:
-1) Call get_tasks_from_supabase to load current tasks from the database.
-2) Call get_webhook_commit to extract the commit from webhook data.
-3) Analyze the commit against tasks:
+You are a JSON generator that analyzes a single GitHub commit against project nodes (tasks). You MUST:
+1) Call get_project_id_from_webhook to identify the project from webhook data.
+2) Call get_tasks_from_supabase with the project_id to load current nodes, edges, and relations.
+3) Call get_webhook_commit to extract the commit from webhook data.
+4) Analyze the commit against nodes:
    - Commit message content and keywords
    - File changes (added/modified/removed files)
-   - Task titles and descriptions
-   - Task IDs mentioned in commit messages
-4) Return ONLY JSON following this schema (no extra text):
+   - Node names and types
+   - Node IDs mentioned in commit messages
+   - Consider hierarchical relationships from edges
+5) Return ONLY JSON following this schema (no extra text):
 
 {
   "sha": "string",
   "was_task": true | false,
-  "matched_task_id": "string or null",
+  "matched_node_id": "string or null",
   "reason": "short explanation",
   "confidence": 0.0-1.0
 }
 
 Analysis Rules:
-- Look for exact task ID references in commit messages (e.g., "T-42", "fixes #123")
-- Match commit message keywords to task titles/descriptions
-- Consider file paths that relate to task functionality
+- Look for exact node ID references in commit messages (e.g., "T-42", "fixes #123")
+- Match commit message keywords to node names and types
+- Consider file paths that relate to node functionality
+- Use edges to understand parent-child relationships
 - Prefer precision over recall - only mark as task-related if confident
-- If unsure, set was_task=false and matched_task_id=null
+- If unsure, set was_task=false and matched_node_id=null
 - Include confidence score based on match strength
 - Keep 'reason' concise but informative
 """,
-    tools=[get_tasks_from_supabase, get_webhook_commit]
+    tools=[get_tasks_from_supabase, get_webhook_commit, get_project_id_from_webhook]
 )
 
 # ---------------------------
