@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import Navbar from "@/components/Navbar";
+
+
 
 
 export default function Home() {
@@ -19,7 +23,9 @@ export default function Home() {
   };
 
   return (
-    <div className="form-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div>
+      <Navbar></Navbar>
+      <div className="form-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
 
       <form className='theform' onSubmit={handleSubmit} style={{ padding: '16px', boxShadow: '0 6px 16px rgba(0,0,0,0.04)' }}>
         <div className='form-title'>Enter your project idea</div>
@@ -103,6 +109,7 @@ export default function Home() {
           Submit
         </button>
       </form>
+      </div>
     </div>
   );
 }
