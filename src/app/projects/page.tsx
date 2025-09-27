@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Projects() {
     const projects = [
         {
@@ -61,18 +63,20 @@ export default function Projects() {
                 }}>
                     Your Projects
                 </h1>
-                <button style={{
-                    backgroundColor: '#495B69',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    fontSize: '1rem'
-                }}>
-                    Create a Project
-                </button>
+                <Link href="/">
+                    <button style={{
+                        backgroundColor: '#495B69',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        fontSize: '1rem'
+                    }}>
+                        Create a Project
+                    </button>
+                </Link>
             </div>
 
             {/* Projects List */}

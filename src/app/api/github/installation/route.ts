@@ -1,4 +1,4 @@
-import { listInstallationRepositories } from "@/lib/github/installations";
+import { listInstallationRepositories } from "@/lib/github/actions";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
