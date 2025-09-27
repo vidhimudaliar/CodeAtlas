@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import {
   IconCalendarStats,
   IconDeviceDesktopAnalytics,
@@ -17,16 +18,18 @@ import { Stack, Tooltip, UnstyledButton } from '@mantine/core';
 import classes from './NavbarMinimalColored.module.css';
 
 interface NavbarLinkProps {
-  icon: typeof IconHome2;
+  icon?: typeof IconHome2;
   label: string;
   active?: boolean;
   onClick?: () => void;
   href?: string;
+  isLogo?: boolean;
+  svgIcon?: string;
 }
 
-function NavbarLink({ icon: Icon, label, active, onClick, href }: NavbarLinkProps) {
+function NavbarLink({ icon: Icon, label, active, onClick, href, isLogo = false, svgIcon }: NavbarLinkProps) {
   const router = useRouter();
-  
+
   const handleClick = () => {
     if (href) {
       router.push(href);
@@ -39,23 +42,31 @@ function NavbarLink({ icon: Icon, label, active, onClick, href }: NavbarLinkProp
   return (
     <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
       <UnstyledButton onClick={handleClick} className={classes.link} data-active={active || undefined}>
-        <Icon size={20} stroke={1.5} />
+        {isLogo ? (
+          <Image src="/bluelogo.png" alt="logo" width={24} height={24} />
+        ) : svgIcon ? (
+          <Image src={svgIcon} alt={label} width={24} height={24} />
+        ) : (
+          Icon && <Icon size={20} stroke={1.5} />
+        )}
       </UnstyledButton>
     </Tooltip>
   );
 }
 
 const mockdata = [
-  { icon: IconHome2, label: 'Home', href: '/' },
-  { icon: IconGauge, label: 'Dashboard', href: '/dashboard' },
-  { icon: IconDeviceDesktopAnalytics, label: 'Analytics', href: '/analytics' },
-  { icon: IconCalendarStats, label: 'Releases', href: '/releases' },
-  { icon: IconUser, label: 'Account', href: '/account' },
-  { icon: IconFingerprint, label: 'Security', href: '/security' },
-  { icon: IconSettings, label: 'Settings', href: '/settings' },
+  // { label: 'Home', href: '/', isLogo: true },
+
+  // { icon: IconDeviceDesktopAnalytics, label: 'Analytics', href: '/analytics' },
+  // { icon: IconCalendarStats, label: 'Releases', href: '/releases' },
+  { svgIcon: '/profile-icon.svg', label: 'Profile', href: '/profile' },
+  { svgIcon: '/dashboard-icon.svg', label: 'Dashboard', href: '/dashboard' },
+  { svgIcon: '/projects-icon.svg', label: 'Projects', href: '/projects' },
+  { svgIcon: '/contributions-icon.svg', label: 'Contributions', href: '/contributions' },
 ];
 
 export function NavbarMinimalColored() {
+  const router = useRouter();
   const pathname = usePathname();
 
   // Set active based on current path
@@ -65,7 +76,7 @@ export function NavbarMinimalColored() {
     return index >= 0 ? index : 0;
   };
 
-  const links = mockdata.map((link, index) => (
+  const mainLinks = mockdata.map((link, index) => (
     <NavbarLink
       {...link}
       key={link.label}
@@ -75,17 +86,30 @@ export function NavbarMinimalColored() {
 
   return (
     <nav className={classes.navbar}>
+      {/* Logo at the top */}
+      <div className={classes.logoSection}>
+        <Tooltip label="Dashboard" position="right" transitionProps={{ duration: 0 }}>
+          <UnstyledButton
+            onClick={() => router.push('/dashboard')}
+            className={classes.logoButton}
+          >
+            <Image src="/bluelogo.png" alt="CodeAtlas Logo" width={40} height={40} />
+          </UnstyledButton>
+        </Tooltip>
+      </div>
 
       <div className={classes.navbarMain}>
-        <Stack justify="center" gap={0}>
-          {links}
+        <Stack justify="center" gap={20}>
+          {mainLinks}
         </Stack>
       </div>
 
-      <Stack justify="center" gap={0}>
-        <NavbarLink icon={IconSwitchHorizontal} label="Change account" />
-        <NavbarLink icon={IconLogout} label="Logout" />
-      </Stack>
+      <div className={classes.navbarBottom}>
+        <Stack justify="center" gap={20}>
+          {/* <NavbarLink icon={IconSwitchHorizontal} label="Change account" /> */}
+          <NavbarLink icon={IconLogout} label="Logout" />
+        </Stack>
+      </div>
     </nav>
   );
 }

@@ -1,36 +1,78 @@
 .navbar {
-    width: 80px;
-    height: 750px;
-    padding: var(--mantine-spacing-md);
-    display: flex;
-    flex-direction: column;
-    background-color: #AAD9DF;
+  width: 80px;
+  height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: #AAD9DF;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.logoSection {
+  padding: 15px 0 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoButton {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
-  
-  .navbarMain {
-    flex: 1;
-    margin-top: 50px;
+}
+
+.navbarMain {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  padding-top: 10px;
+}
+
+.navbarBottom {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  padding: 20px 0;
+}
+
+.link {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #495B69;
+  transition: all 0.2s ease;
+  background-color: transparent;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
-  
-  .link {
-    width: 50px;
-    height: 50px;
-    border-radius: var(--mantine-radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--mantine-color-white);
-  
-    &:hover {
-      background-color: var(--mantine-color-blue-7);
-    }
-  
-    &[data-active] {
-      &,
-      &:hover {
-        box-shadow: var(--mantine-shadow-sm);
-        background-color: var(--mantine-color-white);
-        color: var(--mantine-color-blue-6);
-      }
-    }
+
+  /* Style for SVG icons - remove white filter to show original colors */
+  img {
+    filter: none;
+    /* Show original SVG colors */
   }
+}
