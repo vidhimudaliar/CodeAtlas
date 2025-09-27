@@ -1,95 +1,108 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState } from "react";
+
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+
+  const [idea, setIdea] = useState("")
+  const [condition, setCondition] = useState("")
+  const [stack, setStack] = useState("")
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("You submitted")
+    // code to send to agent ...
+    if (idea.trim() === "") return; // ignore empty submissions
+    setIdea(""); // clear input after submission ... change this afterwards
+  };
+
+  return (
+    <div className="form-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+
+      <form className='theform' onSubmit={handleSubmit} style={{ padding: '16px', boxShadow: '0 6px 16px rgba(0,0,0,0.04)' }}>
+        <div className='form-title'>Enter your project idea</div>
+        <div style={{ marginBottom: '12px' }}>
+          
+          <textarea
+            className='input1'
+            value={idea}
+            onChange={(e) => setIdea(e.target.value)}
+            placeholder="e.g., Explain your idea in a few words"
+            style={{ 
+              width: '100%', 
+              padding: '8px 12px', 
+              backgroundColor:'#f2f2f2',
+              color: '#000',
+              border: '1px solid #ccc',
+      
+              
+            }}
+          />
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div>Select Specifications</div>
+        <div style={{ marginBottom: '12px' }}>
+          <label>Choose Framework *</label>
+          <select
+            className='select-button'
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '8px 12px',
+              backgroundColor: '#f2f2f2',
+              color: '#000',
+              border: '1px solid #ccc',
+              
+            }}
+          >
+            <option value="New">Next.js</option>
+            <option value="Like New">Angular.js</option>
+            <option value="Gently Used">Django</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '12px' }}>
+          <label>Choose Tech Stack *</label>
+          <select
+            className='select-button'
+            value={stack}
+            onChange={(e) => setStack(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '8px 12px',
+              backgroundColor: '#f2f2f2',
+              color: '#000',
+              border: '1px solid #ccc',
+              
+            }}
+          >
+            <option value="New">Next.js</option>
+            <option value="Like New">Angular.js</option>
+            <option value="Gently Used">Django</option>
+          </select>
+        </div>
+
+        
+
+        <button
+          type="submit"
+          style={{
+            padding: '12px 20px',
+            backgroundColor: '#543737',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '20px',
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Submit
+        </button>
+      </form>
     </div>
   );
 }
