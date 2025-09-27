@@ -1,71 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ConnectGitHubButton } from "@/components/connect-github-button";
 
-const STATE_STORAGE_KEY = "codeatlas-gh-app-state";
-export function connectGitHub(options: { redirect?: boolean } = {}): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  const appSlug = process.env.NEXT_PUBLIC_GH_APP_SLUG;
-  if (!appSlug) {
-    console.warn("connectGitHub called without NEXT_PUBLIC_GH_APP_SLUG configured");
-    return null;
-  }
-  let state = window.sessionStorage.getItem(STATE_STORAGE_KEY);
-  if (!state) {
-    state = window.crypto.randomUUID();
-    window.sessionStorage.setItem(STATE_STORAGE_KEY, state);
-  }
-  const target = new URL(`https://github.com/apps/${appSlug}/installations/new`);
-  target.searchParams.set("state", state);
-  const url = target.toString();
-  if (options.redirect !== false) {
-    window.location.href = url;
-  }
-  return url;
-}
-export default function ConnectGitHub() {
-  const appSlug = process.env.NEXT_PUBLIC_GH_APP_SLUG;
-  const [installUrl, setInstallUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const url = connectGitHub({ redirect: false });
-    setInstallUrl(url);
-  }, []);
-  const handleInstall = useCallback(() => {
-    const url = connectGitHub();
-    if (!url) {
-      setError("Unable to build installation URL. Check configuration and try again.");
-    }
-  }, []);
-
+export default function ConnectGitHubPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">Connect GitHub</h1>
         <p className="text-sm text-gray-600">
-          Install the CodeAtlas GitHub App on the repository you want to analyze. GitHub will bring you
-          back here once the installation is complete.
+          Install the CodeAtlas GitHub App on the repository you want to analyze. GitHub will bring you back here once the
+          installation is complete.
         </p>
       </header>
 
-      {!appSlug ? (
+      {!process.env.NEXT_PUBLIC_GH_APP_SLUG ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-          <strong>Missing configuration.</strong> Set <code>NEXT_PUBLIC_GH_APP_SLUG</code> in your environment
-          to continue.
+          <strong>Missing configuration.</strong> Set <code>NEXT_PUBLIC_GH_APP_SLUG</code> in your environment to continue.
         </div>
       ) : null}
 
       <div className="flex items-center gap-3">
-        <a
-          href={installUrl ?? undefined}
-          className="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-          aria-disabled={!installUrl}
-        >
+        <ConnectGitHubButton className="inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
           Install GitHub App
-        </a>
+        </ConnectGitHubButton>
         <span className="text-xs text-gray-500">You&apos;ll pick a repository on GitHub.</span>
       </div>
 

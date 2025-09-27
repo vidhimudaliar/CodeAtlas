@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { InstallationRepository } from "@/lib/github/installations";
+import type { InstallationRepository } from "@/lib/github/actions";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 

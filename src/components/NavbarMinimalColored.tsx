@@ -88,14 +88,9 @@ export function NavbarMinimalColored() {
     <nav className={classes.navbar}>
       {/* Logo at the top */}
       <div className={classes.logoSection}>
-        <Tooltip label="Dashboard" position="right" transitionProps={{ duration: 0 }}>
-          <UnstyledButton
-            onClick={() => router.push('/dashboard')}
-            className={classes.logoButton}
-          >
-            <Image src="/bluelogo.png" alt="CodeAtlas Logo" width={40} height={40} />
-          </UnstyledButton>
-        </Tooltip>
+        <div className={classes.logoButton}>
+          <Image src="/bluelogo.png" alt="CodeAtlas Logo" width={40} height={40} />
+        </div>
       </div>
 
       <div className={classes.navbarMain}>

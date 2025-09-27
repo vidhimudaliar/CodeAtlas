@@ -5,7 +5,8 @@ import Image from 'next/image';
 
 export default function ShellhacksProject() {
     const [activeTab, setActiveTab] = useState('board');
-    const [selectedTask, setSelectedTask] = useState(null);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [selectedSubtask, setSelectedSubtask] = useState<any>(null);
 
     const tabs = [
         { id: 'summary', label: 'Summary', icon: 'summary-icon.svg', iconBold: 'summary-icon-bold.svg' },
@@ -23,17 +24,47 @@ export default function ShellhacksProject() {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
                 subtasks: {
                     todo: [
-                        { id: 1, title: 'Workshop Rooms', labels: ['LOCATION'] },
-                        { id: 2, title: 'Sleeping Rooms', labels: ['LOCATION'] }
+                        {
+                            id: 1,
+                            title: 'Workshop Rooms',
+                            labels: ['LOCATION'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                            githubUrl: 'https://github.com/shellhacks/workshop-rooms'
+                        },
+                        {
+                            id: 2,
+                            title: 'Sleeping Rooms',
+                            labels: ['LOCATION'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                            githubUrl: 'https://github.com/shellhacks/sleeping-rooms'
+                        }
                     ],
                     inProgress: [
-                        { id: 3, title: 'Food Area', labels: ['FOOD'] }
+                        {
+                            id: 3,
+                            title: 'Food Area',
+                            labels: ['FOOD'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                            githubUrl: 'https://github.com/shellhacks/food-area'
+                        }
                     ],
                     testing: [
-                        { id: 4, title: 'Sponsor Dinner Room', labels: ['SPONSOR'] }
+                        {
+                            id: 4,
+                            title: 'Sponsor Dinner Room',
+                            labels: ['SPONSOR'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                            githubUrl: 'https://github.com/shellhacks/sponsor-dinner'
+                        }
                     ],
                     done: [
-                        { id: 5, title: 'Grand Ballroom', labels: ['VENUE'] }
+                        {
+                            id: 5,
+                            title: 'Grand Ballroom',
+                            labels: ['VENUE'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                            githubUrl: 'https://github.com/shellhacks/grand-ballroom'
+                        }
                     ]
                 }
             },
@@ -44,11 +75,29 @@ export default function ShellhacksProject() {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 subtasks: {
                     todo: [
-                        { id: 6, title: 'Menu Planning', labels: ['FOOD'] },
-                        { id: 7, title: 'Catering Setup', labels: ['LOGISTICS'] }
+                        {
+                            id: 6,
+                            title: 'Menu Planning',
+                            labels: ['FOOD'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/menu-planning'
+                        },
+                        {
+                            id: 7,
+                            title: 'Catering Setup',
+                            labels: ['LOGISTICS'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/catering-setup'
+                        }
                     ],
                     inProgress: [
-                        { id: 8, title: 'Dietary Restrictions', labels: ['PARTICIPANT'] }
+                        {
+                            id: 8,
+                            title: 'Dietary Restrictions',
+                            labels: ['PARTICIPANT'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/dietary-restrictions'
+                        }
                     ],
                     testing: [],
                     done: []
@@ -61,8 +110,20 @@ export default function ShellhacksProject() {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 subtasks: {
                     todo: [
-                        { id: 9, title: 'Database Design', labels: ['BACKEND'] },
-                        { id: 10, title: 'UI Components', labels: ['FRONTEND'] }
+                        {
+                            id: 9,
+                            title: 'Database Design',
+                            labels: ['BACKEND'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/database-design'
+                        },
+                        {
+                            id: 10,
+                            title: 'UI Components',
+                            labels: ['FRONTEND'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/ui-components'
+                        }
                     ],
                     inProgress: [],
                     testing: [],
@@ -76,8 +137,20 @@ export default function ShellhacksProject() {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 subtasks: {
                     todo: [
-                        { id: 11, title: 'Sponsor List', labels: ['SPONSOR'] },
-                        { id: 12, title: 'Email Templates', labels: ['COMMUNICATION'] }
+                        {
+                            id: 11,
+                            title: 'Sponsor List',
+                            labels: ['SPONSOR'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/sponsor-list'
+                        },
+                        {
+                            id: 12,
+                            title: 'Email Templates',
+                            labels: ['COMMUNICATION'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/email-templates'
+                        }
                     ],
                     inProgress: [],
                     testing: [],
@@ -94,7 +167,13 @@ export default function ShellhacksProject() {
                 subtasks: {
                     todo: [],
                     inProgress: [
-                        { id: 13, title: 'Registration System', labels: ['TECH'] }
+                        {
+                            id: 13,
+                            title: 'Registration System',
+                            labels: ['TECH'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/registration-system'
+                        }
                     ],
                     testing: [],
                     done: []
@@ -111,7 +190,13 @@ export default function ShellhacksProject() {
                     todo: [],
                     inProgress: [],
                     testing: [
-                        { id: 14, title: 'Venue Selection', labels: ['VENUE'] }
+                        {
+                            id: 14,
+                            title: 'Venue Selection',
+                            labels: ['VENUE'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/venue-selection'
+                        }
                     ],
                     done: []
                 }
@@ -123,17 +208,47 @@ export default function ShellhacksProject() {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
                 subtasks: {
                     todo: [
-                        { id: 15, title: 'Workshop Rooms', labels: ['LOCATION'] },
-                        { id: 16, title: 'Sleeping Rooms', labels: ['LOCATION'] }
+                        {
+                            id: 15,
+                            title: 'Workshop Rooms',
+                            labels: ['LOCATION'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/workshop-rooms-2'
+                        },
+                        {
+                            id: 16,
+                            title: 'Sleeping Rooms',
+                            labels: ['LOCATION'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/sleeping-rooms-2'
+                        }
                     ],
                     inProgress: [
-                        { id: 17, title: 'Food Area', labels: ['FOOD'] }
+                        {
+                            id: 17,
+                            title: 'Food Area',
+                            labels: ['FOOD'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/food-area-2'
+                        }
                     ],
                     testing: [
-                        { id: 18, title: 'Sponsor Dinner Room', labels: ['SPONSOR'] }
+                        {
+                            id: 18,
+                            title: 'Sponsor Dinner Room',
+                            labels: ['SPONSOR'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/sponsor-dinner-2'
+                        }
                     ],
                     done: [
-                        { id: 19, title: 'Grand Ballroom', labels: ['VENUE'] }
+                        {
+                            id: 19,
+                            title: 'Grand Ballroom',
+                            labels: ['VENUE'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/grand-ballroom-2'
+                        }
                     ]
                 }
             }
@@ -149,8 +264,20 @@ export default function ShellhacksProject() {
                     inProgress: [],
                     testing: [],
                     done: [
-                        { id: 20, title: 'Domain Setup', labels: ['TECH'] },
-                        { id: 21, title: 'SSL Certificate', labels: ['SECURITY'] }
+                        {
+                            id: 20,
+                            title: 'Domain Setup',
+                            labels: ['TECH'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/domain-setup'
+                        },
+                        {
+                            id: 21,
+                            title: 'SSL Certificate',
+                            labels: ['SECURITY'],
+                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            githubUrl: 'https://github.com/shellhacks/ssl-certificate'
+                        }
                     ]
                 }
             }
@@ -289,13 +416,15 @@ export default function ShellhacksProject() {
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        {selectedTask.subtasks.todo.map((subtask) => (
+                                        {selectedTask.subtasks.todo.map((subtask: any) => (
                                             <div key={subtask.id} style={{
                                                 backgroundColor: '#AAD9DF',
                                                 padding: '1rem',
                                                 borderRadius: '8px',
                                                 cursor: 'pointer'
-                                            }}>
+                                            }}
+                                                onClick={() => setSelectedSubtask(subtask)}
+                                            >
                                                 <h5 style={{
                                                     color: '#495B69',
                                                     margin: '0 0 0.5rem 0',
@@ -305,7 +434,7 @@ export default function ShellhacksProject() {
                                                     {subtask.title}
                                                 </h5>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label, index) => (
+                                                    {subtask.labels.map((label: string, index: number) => (
                                                         <span key={index} style={{
                                                             backgroundColor: '#495B69',
                                                             color: 'white',
@@ -356,13 +485,15 @@ export default function ShellhacksProject() {
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        {selectedTask.subtasks.inProgress.map((subtask) => (
+                                        {selectedTask.subtasks.inProgress.map((subtask: any) => (
                                             <div key={subtask.id} style={{
                                                 backgroundColor: '#AAD9DF',
                                                 padding: '1rem',
                                                 borderRadius: '8px',
                                                 cursor: 'pointer'
-                                            }}>
+                                            }}
+                                                onClick={() => setSelectedSubtask(subtask)}
+                                            >
                                                 <h5 style={{
                                                     color: '#495B69',
                                                     margin: '0 0 0.5rem 0',
@@ -372,7 +503,7 @@ export default function ShellhacksProject() {
                                                     {subtask.title}
                                                 </h5>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label, index) => (
+                                                    {subtask.labels.map((label: string, index: number) => (
                                                         <span key={index} style={{
                                                             backgroundColor: '#495B69',
                                                             color: 'white',
@@ -423,13 +554,15 @@ export default function ShellhacksProject() {
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        {selectedTask.subtasks.testing.map((subtask) => (
+                                        {selectedTask.subtasks.testing.map((subtask: any) => (
                                             <div key={subtask.id} style={{
                                                 backgroundColor: '#AAD9DF',
                                                 padding: '1rem',
                                                 borderRadius: '8px',
                                                 cursor: 'pointer'
-                                            }}>
+                                            }}
+                                                onClick={() => setSelectedSubtask(subtask)}
+                                            >
                                                 <h5 style={{
                                                     color: '#495B69',
                                                     margin: '0 0 0.5rem 0',
@@ -439,7 +572,7 @@ export default function ShellhacksProject() {
                                                     {subtask.title}
                                                 </h5>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label, index) => (
+                                                    {subtask.labels.map((label: string, index: number) => (
                                                         <span key={index} style={{
                                                             backgroundColor: '#495B69',
                                                             color: 'white',
@@ -490,13 +623,15 @@ export default function ShellhacksProject() {
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        {selectedTask.subtasks.done.map((subtask) => (
+                                        {selectedTask.subtasks.done.map((subtask: any) => (
                                             <div key={subtask.id} style={{
                                                 backgroundColor: '#AAD9DF',
                                                 padding: '1rem',
                                                 borderRadius: '8px',
                                                 cursor: 'pointer'
-                                            }}>
+                                            }}
+                                                onClick={() => setSelectedSubtask(subtask)}
+                                            >
                                                 <h5 style={{
                                                     color: '#495B69',
                                                     margin: '0 0 0.5rem 0',
@@ -506,7 +641,7 @@ export default function ShellhacksProject() {
                                                     {subtask.title}
                                                 </h5>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label, index) => (
+                                                    {subtask.labels.map((label: string, index: number) => (
                                                         <span key={index} style={{
                                                             backgroundColor: '#495B69',
                                                             color: 'white',
@@ -524,6 +659,143 @@ export default function ShellhacksProject() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderSubtaskSidePanel = () => {
+        if (!selectedSubtask) return null;
+
+        return (
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                width: '400px',
+                height: '100vh',
+                backgroundColor: 'white',
+                borderLeft: '1px solid #e9ecef',
+                boxShadow: '-4px 0 8px rgba(0, 0, 0, 0.1)',
+                zIndex: 1001,
+                overflow: 'auto'
+            }}>
+                {/* Side Panel Header */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1.5rem',
+                    borderBottom: '1px solid #e9ecef'
+                }}>
+                    <h3 style={{
+                        color: '#495B69',
+                        margin: 0,
+                        fontSize: '1.25rem',
+                        fontWeight: '600'
+                    }}>
+                        {selectedSubtask.title}
+                    </h3>
+                    <button
+                        onClick={() => setSelectedSubtask(null)}
+                        style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            fontSize: '1.5rem',
+                            cursor: 'pointer',
+                            color: '#6c757d',
+                            padding: '0.25rem'
+                        }}
+                    >
+                        ×
+                    </button>
+                </div>
+
+                {/* Side Panel Content */}
+                <div style={{ padding: '1.5rem' }}>
+                    {/* Description */}
+                    <div style={{ marginBottom: '2rem' }}>
+                        <p style={{
+                            color: '#495B69',
+                            lineHeight: '1.6',
+                            margin: 0,
+                            fontSize: '0.875rem'
+                        }}>
+                            {selectedSubtask.description}
+                        </p>
+                    </div>
+
+                    {/* Code Section */}
+                    <div>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '1rem'
+                        }}>
+                            <h4 style={{
+                                color: '#495B69',
+                                margin: 0,
+                                fontSize: '1rem',
+                                fontWeight: '600'
+                            }}>
+                                Code
+                            </h4>
+                            <button
+                                onClick={() => window.open(selectedSubtask.githubUrl, '_blank')}
+                                style={{
+                                    backgroundColor: '#495B69',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '6px',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Go to Github
+                            </button>
+                        </div>
+
+                        {/* Code Placeholder */}
+                        <div style={{
+                            backgroundColor: '#1e1e1e',
+                            color: '#d4d4d4',
+                            padding: '1.5rem',
+                            borderRadius: '8px',
+                            fontFamily: 'Monaco, Consolas, "Courier New", monospace',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.5',
+                            minHeight: '300px',
+                            overflow: 'auto'
+                        }}>
+                            <div style={{ color: '#569cd6' }}>// Backend API call placeholder</div>
+                            <div style={{ color: '#9cdcfe' }}>const</div>
+                            <span style={{ color: '#4fc1ff' }}> response</span>
+                            <span style={{ color: '#d4d4d4' }}> = </span>
+                            <span style={{ color: '#4fc1ff' }}>await</span>
+                            <span style={{ color: '#d4d4d4' }}> fetch(</span>
+                            <span style={{ color: '#ce9178' }}>'/api/subtasks/{selectedSubtask.id}'</span>
+                            <span style={{ color: '#d4d4d4' }}>);</span>
+                            <br /><br />
+                            <div style={{ color: '#9cdcfe' }}>const</div>
+                            <span style={{ color: '#4fc1ff' }}> data</span>
+                            <span style={{ color: '#d4d4d4' }}> = </span>
+                            <span style={{ color: '#4fc1ff' }}>await</span>
+                            <span style={{ color: '#d4d4d4' }}> response.json();</span>
+                            <br /><br />
+                            <div style={{ color: '#569cd6' }}>// This will be populated with actual backend data</div>
+                            <div style={{ color: '#569cd6' }}>// when the API endpoints are implemented</div>
+                            <br />
+                            <div style={{ color: '#9cdcfe' }}>console</div>
+                            <span style={{ color: '#d4d4d4' }}>.</span>
+                            <span style={{ color: '#dcdcaa' }}>log</span>
+                            <span style={{ color: '#d4d4d4' }}>(</span>
+                            <span style={{ color: '#4fc1ff' }}>data</span>
+                            <span style={{ color: '#d4d4d4' }}>);</span>
                         </div>
                     </div>
                 </div>
@@ -895,6 +1167,9 @@ export default function ShellhacksProject() {
 
             {/* Task Modal */}
             {renderTaskModal()}
+
+            {/* Subtask Side Panel */}
+            {renderSubtaskSidePanel()}
         </div>
     );
 }
