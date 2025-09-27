@@ -1,156 +1,174 @@
-# file: task_classifier_adk.py
 # Requirements
-#   pip install google-adk google-generativeai
-# Optional (only if you change to real HTTP): requests
+#   pip install google-adk google-generativeai supabase requests
 
 import os
 import json
-import sqlite3
-import difflib
 import asyncio
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 import google.generativeai as genai
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService, Session
 from google.genai.types import Content, Part
+from supabase import create_client, Client
+import requests
 
 # ---------------------------
 # 0) Config
 # ---------------------------
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-if not GOOGLE_API_KEY:
-    # Set this in your env before running, or hardcode for quick tests
-    # os.environ["GOOGLE_API_KEY"] = "YOUR_KEY"
-    pass
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ---------------------------
 # 1) Static-data tool (stub now, GET later)
 # ---------------------------
 
-def get_static_tasks() -> dict:
-    """
-    Return the current static tasks to compare against commits.
-    Later: replace internals with requests.get(YOUR_URL).json().
-    Output schema:
-    {
-      "tasks":[
-        {"id":"T-42", "title":"Add login button"},
-        {"id":"T-77", "title":"Fix 500 on /signup"}
-      ]
-    }
-    """
-    # ---- swap this block with your GET API when ready ----
+def get_tasks_from_supabase() -> dict:
+    # Fallback static data for testing
     return {
         "tasks": [
-            {"id": "T-42", "title": "Add login button"},
-            {"id": "T-77", "title": "Fix 500 on /signup"},
-            {"id": "T-88", "title": "Refactor email sender"},
+            {"id": "T-42", "title": "Add login button", "description": "Implement login functionality", "status": "in_progress"},
+            {"id": "T-77", "title": "Fix 500 on /signup", "description": "Resolve server error on signup page", "status": "open"},
+            {"id": "T-88", "title": "Refactor email sender", "description": "Improve email sending reliability", "status": "completed"},
+            {"id": "T-99", "title": "Add agency client component", "description": "Create new agency client interface", "status": "open"},
         ]
     }
 
 # ---------------------------
-# 2) SQL tool (SQLite example; replace with your DB)
+# 2) GitHub webhook data parser
 # ---------------------------
 
-def query_recent_commits(limit: int = 20) -> dict:
+def parse_github_webhook_payload(webhook_data: dict) -> dict:
     """
-    Query recent commits from the database and return:
-    {"commits":[{"sha": "...", "msg":"...", "author":"...", "date":"..."}]}
-    Notes:
-    - Uses SQLite for demo. Replace with your DB driver (psycopg, mysqlclient, etc.)
-    - Make sure your DB has a 'commits' table or adjust SQL accordingly.
+    Parse GitHub webhook payload and extract commit information.
+    Input: GitHub webhook payload (push event)
+    Output: {"commits":[{"sha": "...", "msg":"...", "author":"...", "date":"...", "files": [...]}]}
     """
-    # Change path/connection for your environment
-    con = sqlite3.connect("app.db")
-    try:
-        con.execute("""
-        CREATE TABLE IF NOT EXISTS commits (
-            sha TEXT PRIMARY KEY,
-            message TEXT,
-            author TEXT,
-            committed_at TEXT
-        )
-        """)
-        # Seed a few example rows if table is empty
-        row_count = con.execute("SELECT COUNT(*) FROM commits").fetchone()[0]
-        if row_count == 0:
-            con.executemany(
-                "INSERT OR IGNORE INTO commits (sha, message, author, committed_at) VALUES (?,?,?,?)",
-                [
-                    ("a1b2c3", "Add login button on navbar", "rafa", "2025-09-26T10:20:00Z"),
-                    ("d4e5f6", "hotfix 500 error on /signup controller", "rafa", "2025-09-26T11:00:00Z"),
-                    ("0f1e2d", "Update README", "rafa", "2025-09-26T11:30:00Z"),
-                    ("abc999", "refactor email sender to reduce retries", "rafa", "2025-09-26T12:00:00Z"),
-                ],
-            )
-            con.commit()
+    commits = []
+    
+    if webhook_data.get("event") == "push" and "payload" in webhook_data:
+        payload = webhook_data["payload"]
+        
+        # Extract commits from the payload
+        webhook_commits = payload.get("commits", [])
+        
+        for commit in webhook_commits:
+            commit_info = {
+                "sha": commit.get("id", ""),
+                "msg": commit.get("message", ""),
+                "author": commit.get("author", {}).get("name", ""),
+                "date": commit.get("timestamp", ""),
+                "files": {
+                    "added": commit.get("added", []),
+                    "removed": commit.get("removed", []),
+                    "modified": commit.get("modified", [])
+                },
+                "url": commit.get("url", "")
+            }
+            commits.append(commit_info)
+    
+    return {"commits": commits}
 
-        rows = con.execute("""
-            SELECT sha, message, author, committed_at
-            FROM commits
-            ORDER BY committed_at DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
-
-        return {
+def get_sample_webhook_data() -> dict:
+    """
+    Return sample GitHub webhook data for testing.
+    """
+    return {
+        "event": "push",
+        "payload": {
+            "ref": "refs/heads/feature/n8n",
+            "before": "10196470e3d299c99c1b2fb6b94a4e688046b358",
+            "after": "37c3d51058b8f787a6c29719e880ff8626339147",
+            "repository": {
+                "id": 857492214,
+                "name": "DeepVisor",
+                "full_name": "Yengner/DeepVisor",
+                "private": False,
+                "owner": {
+                    "name": "Yengner",
+                    "email": "Yengnerb475@gmail.com",
+                    "login": "Yengner"
+                }
+            },
+            "pusher": {
+                "name": "Yengner",
+                "email": "Yengnerb475@gmail.com"
+            },
             "commits": [
-                {"sha": r[0], "msg": r[1], "author": r[2], "date": r[3]}
-                for r in rows
-            ]
+                {
+                    "id": "37c3d51058b8f787a6c29719e880ff8626339147",
+                    "tree_id": "470d8dca073df53e1c728aa820883b6cb4445f38",
+                    "distinct": True,
+                    "message": "he",
+                    "timestamp": "2025-09-27T14:32:34-04:00",
+                    "url": "https://github.com/Yengner/DeepVisor/commit/37c3d51058b8f787a6c29719e880ff8626339147",
+                    "author": {
+                        "name": "Yengner",
+                        "email": "Yengnerb475@gmail.com",
+                        "username": "Yengner"
+                    },
+                    "committer": {
+                        "name": "Yengner",
+                        "email": "Yengnerb475@gmail.com",
+                        "username": "Yengner"
+                    },
+                    "added": ["src/app/(root)/agency/AgencyClient.tsx"],
+                    "removed": [],
+                    "modified": []
+                }
+            ],
+            "head_commit": {
+                "id": "37c3d51058b8f787a6c29719e880ff8626339147",
+                "tree_id": "470d8dca073df53e1c728aa820883b6cb4445f38",
+                "distinct": True,
+                "message": "he",
+                "timestamp": "2025-09-27T14:32:34-04:00",
+                "url": "https://github.com/Yengner/DeepVisor/commit/37c3d51058b8f787a6c29719e880ff8626339147",
+                "author": {
+                    "name": "Yengner",
+                    "email": "Yengnerb475@gmail.com",
+                    "username": "Yengner"
+                },
+                "committer": {
+                    "name": "Yengner",
+                    "email": "Yengnerb475@gmail.com",
+                    "username": "Yengner"
+                },
+                "added": ["src/app/(root)/agency/AgencyClient.tsx"],
+                "removed": [],
+                "modified": []
+            }
         }
-    finally:
-        con.close()
+    }
 
 # ---------------------------
-# 3) (Optional) Local matcher you can unit test
-# ---------------------------
-
-def normalize(s: str) -> str:
-    return " ".join(s.lower().strip().split())
-
-def match_commit_to_tasks(commit_msg: str, tasks: List[Dict[str, Any]], ratio_threshold: float = 0.75):
-    """
-    Simple fuzzy match between commit message and task titles.
-    Returns (was_task: bool, matched_task_id: Optional[str], reason: str)
-    You can replace this with embeddings later.
-    """
-    c = normalize(commit_msg)
-    best_id, best_ratio, best_title = None, 0.0, None
-
-    for t in tasks:
-        title = normalize(t.get("title", ""))
-        ratio = difflib.SequenceMatcher(None, c, title).ratio()
-        if ratio > best_ratio:
-            best_ratio, best_id, best_title = ratio, t.get("id"), t.get("title")
-
-        # Quick exact-ish triggers
-        # Check if task ID shows up in commit message
-        if t.get("id") and t["id"].lower() in c:
-            return True, t["id"], f"commit references task id {t['id']}"
-
-    if best_ratio >= ratio_threshold:
-        return True, best_id, f"fuzzy match to '{best_title}' ({best_ratio:.2f})"
-
-    return False, None, f"no sufficient match (best={best_ratio:.2f})"
-
-# ---------------------------
-# 4) Agent that calls both tools and returns strict JSON
+# 3) Agent that calls both tools and returns strict JSON
 # ---------------------------
 
 task_classifier = Agent(
     name="task_classifier",
     model="gemini-2.5-flash",  # fast + cheap; upgrade to pro if needed
-    description="Classifies whether each commit corresponds to a known task by combining static tasks + SQL commits.",
+    description="Classifies whether each commit corresponds to a known task by analyzing GitHub webhook data against Supabase tasks.",
     instruction="""
-You are a strict JSON generator. You MUST:
-1) Call get_static_tasks to load tasks.
-2) Call query_recent_commits to load recent commits.
-3) Compare each commit message to the task list using exact match hints (IDs/keywords) and near-match heuristics.
+You are a strict JSON generator that analyzes GitHub commits against project tasks. You MUST:
+1) Call get_tasks_from_supabase to load current tasks from the database.
+2) Call parse_github_webhook_payload to extract commit information from webhook data.
+3) For each commit, analyze:
+   - Commit message content and keywords
+   - File changes (added/modified/removed files)
+   - Task titles and descriptions
+   - Task IDs mentioned in commit messages
 4) Return ONLY JSON following this schema (no extra text):
 
 {
@@ -159,30 +177,41 @@ You are a strict JSON generator. You MUST:
       "sha": "string",
       "was_task": true | false,
       "matched_task_id": "string or null",
-      "reason": "short explanation"
+      "reason": "short explanation",
+      "confidence": 0.0-1.0
     }
   ]
 }
 
-Rules:
-- Prefer precision over recall.
-- Do not invent task IDs.
-- If unsure, set was_task=false and matched_task_id=null.
-- Keep 'reason' short.
+Analysis Rules:
+- Look for exact task ID references in commit messages (e.g., "T-42", "fixes #123")
+- Match commit message keywords to task titles/descriptions
+- Consider file paths that relate to task functionality
+- Prefer precision over recall - only mark as task-related if confident
+- If unsure, set was_task=false and matched_task_id=null
+- Include confidence score based on match strength
+- Keep 'reason' concise but informative
 """,
-    tools=[get_static_tasks, query_recent_commits]
+    tools=[get_tasks_from_supabase, parse_github_webhook_payload]
 )
 
 # ---------------------------
-# 5) Runner helpers
+# 4) Runner helpers
 # ---------------------------
 
 session_service = InMemorySessionService()
 
-async def run_classification(user_message: str = "Classify the latest 20 commits against current tasks.") -> str:
+async def run_classification(webhook_data: dict = None, user_message: str = None) -> str:
     """
     Executes the agent once and returns the model's final JSON string.
+    If webhook_data is provided, it will be used for classification.
     """
+    if webhook_data is None:
+        webhook_data = get_sample_webhook_data()
+    
+    if user_message is None:
+        user_message = f"Analyze the commits in this GitHub webhook payload against current tasks: {json.dumps(webhook_data, indent=2)}"
+    
     session: Session = await session_service.create_session(
         app_name=task_classifier.name,
         user_id="user-1"
@@ -208,46 +237,82 @@ async def run_classification(user_message: str = "Classify the latest 20 commits
 
     return final_text
 
-# ---------------------------
-# 6) Optional: local (non-LLM) classification path for testing
-# ---------------------------
-
-def classify_locally_without_llm() -> dict:
-    """
-    Bypass the model and do local matching (useful for tests or offline).
-    Returns the same schema as the agent should.
-    """
-    tasks = get_static_tasks().get("tasks", [])
-    commits = query_recent_commits().get("commits", [])
-
-    results = []
-    for c in commits:
-        was_task, matched_id, reason = match_commit_to_tasks(c["msg"], tasks)
-        results.append({
-            "sha": c["sha"],
-            "was_task": was_task,
-            "matched_task_id": matched_id,
-            "reason": reason
-        })
-    return {"results": results}
 
 # ---------------------------
-# 7) Main
+# 5) Main
 # ---------------------------
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Task/Commit classifier via ADK")
-    parser.add_argument("--local", action="store_true",
-                        help="Run local non-LLM matching (no API calls)")
+    parser = argparse.ArgumentParser(description="GitHub Commit/Task classifier via ADK")
+    parser.add_argument("--webhook-file", type=str,
+                        help="Path to JSON file containing GitHub webhook payload")
+    parser.add_argument("--test-sample", action="store_true",
+                        help="Test with the provided sample webhook data")
     args = parser.parse_args()
 
-    if args.local:
-        out = classify_locally_without_llm()
-        print(json.dumps(out, indent=2))
+    # Load webhook data
+    webhook_data = None
+    if args.webhook_file:
+        try:
+            with open(args.webhook_file, 'r') as f:
+                webhook_data = json.load(f)
+        except Exception as e:
+            print(f"Error loading webhook file: {e}")
+            exit(1)
+    elif args.test_sample:
+        webhook_data = get_sample_webhook_data()
     else:
-        if not os.getenv("GOOGLE_API_KEY"):
-            print("Set GOOGLE_API_KEY env var to use the agent (or run with --local).")
-        else:
-            result = asyncio.run(run_classification())
-            print(result)
+        # Use the provided sample data from user
+        webhook_data = {
+            "event": "push",
+            "payload": {
+                "ref": "refs/heads/feature/n8n",
+                "before": "10196470e3d299c99c1b2fb6b94a4e688046b358",
+                "after": "37c3d51058b8f787a6c29719e880ff8626339147",
+                "repository": {
+                    "id": 857492214,
+                    "name": "DeepVisor",
+                    "full_name": "Yengner/DeepVisor",
+                    "private": False,
+                    "owner": {
+                        "name": "Yengner",
+                        "email": "Yengnerb475@gmail.com",
+                        "login": "Yengner"
+                    }
+                },
+                "pusher": {
+                    "name": "Yengner",
+                    "email": "Yengnerb475@gmail.com"
+                },
+                "commits": [
+                    {
+                        "id": "37c3d51058b8f787a6c29719e880ff8626339147",
+                        "tree_id": "470d8dca073df53e1c728aa820883b6cb4445f38",
+                        "distinct": True,
+                        "message": "he",
+                        "timestamp": "2025-09-27T14:32:34-04:00",
+                        "url": "https://github.com/Yengner/DeepVisor/commit/37c3d51058b8f787a6c29719e880ff8626339147",
+                        "author": {
+                            "name": "Yengner",
+                            "email": "Yengnerb475@gmail.com",
+                            "username": "Yengner"
+                        },
+                        "committer": {
+                            "name": "Yengner",
+                            "email": "Yengnerb475@gmail.com",
+                            "username": "Yengner"
+                        },
+                        "added": ["src/app/(root)/agency/AgencyClient.tsx"],
+                        "removed": [],
+                        "modified": []
+                    }
+                ]
+            }
+        }
+
+    if not os.getenv("GOOGLE_API_KEY"):
+        print("Set GOOGLE_API_KEY env var to use the agent.")
+    else:
+        result = asyncio.run(run_classification(webhook_data))
+        print(result)
