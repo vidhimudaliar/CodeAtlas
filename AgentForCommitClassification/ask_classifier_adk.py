@@ -49,36 +49,20 @@ def get_tasks_from_supabase() -> dict:
 # 2) GitHub webhook data parser
 # ---------------------------
 
-def parse_github_webhook_payload(webhook_data: dict) -> dict:
+def get_webhook_commit(webhook_data: dict) -> dict:
     """
-    Parse GitHub webhook payload and extract commit information.
-    Input: GitHub webhook payload (push event)
-    Output: {"commits":[{"sha": "...", "msg":"...", "author":"...", "date":"...", "files": [...]}]}
+    Extract the commit from GitHub webhook payload.
+    Returns the raw commit data from the webhook.
     """
-    commits = []
-    
     if webhook_data.get("event") == "push" and "payload" in webhook_data:
         payload = webhook_data["payload"]
+        commits = payload.get("commits", [])
         
-        # Extract commits from the payload
-        webhook_commits = payload.get("commits", [])
-        
-        for commit in webhook_commits:
-            commit_info = {
-                "sha": commit.get("id", ""),
-                "msg": commit.get("message", ""),
-                "author": commit.get("author", {}).get("name", ""),
-                "date": commit.get("timestamp", ""),
-                "files": {
-                    "added": commit.get("added", []),
-                    "removed": commit.get("removed", []),
-                    "modified": commit.get("modified", [])
-                },
-                "url": commit.get("url", "")
-            }
-            commits.append(commit_info)
+        # Return the first commit (webhooks typically have one commit per push)
+        if commits:
+            return commits[0]
     
-    return {"commits": commits}
+    return {}
 
 def get_sample_webhook_data() -> dict:
     """
@@ -159,12 +143,12 @@ def get_sample_webhook_data() -> dict:
 task_classifier = Agent(
     name="task_classifier",
     model="gemini-2.5-flash",  # fast + cheap; upgrade to pro if needed
-    description="Classifies whether each commit corresponds to a known task by analyzing GitHub webhook data against Supabase tasks.",
+    description="Classifies whether a commit corresponds to a known task by analyzing GitHub webhook data against Supabase tasks.",
     instruction="""
-You are a strict JSON generator that analyzes GitHub commits against project tasks. You MUST:
+You are a JSON generator that analyzes a single GitHub commit against project tasks. You MUST:
 1) Call get_tasks_from_supabase to load current tasks from the database.
-2) Call parse_github_webhook_payload to extract commit information from webhook data.
-3) For each commit, analyze:
+2) Call get_webhook_commit to extract the commit from webhook data.
+3) Analyze the commit against tasks:
    - Commit message content and keywords
    - File changes (added/modified/removed files)
    - Task titles and descriptions
@@ -172,15 +156,11 @@ You are a strict JSON generator that analyzes GitHub commits against project tas
 4) Return ONLY JSON following this schema (no extra text):
 
 {
-  "results":[
-    {
-      "sha": "string",
-      "was_task": true | false,
-      "matched_task_id": "string or null",
-      "reason": "short explanation",
-      "confidence": 0.0-1.0
-    }
-  ]
+  "sha": "string",
+  "was_task": true | false,
+  "matched_task_id": "string or null",
+  "reason": "short explanation",
+  "confidence": 0.0-1.0
 }
 
 Analysis Rules:
@@ -192,7 +172,7 @@ Analysis Rules:
 - Include confidence score based on match strength
 - Keep 'reason' concise but informative
 """,
-    tools=[get_tasks_from_supabase, parse_github_webhook_payload]
+    tools=[get_tasks_from_supabase, get_webhook_commit]
 )
 
 # ---------------------------
@@ -210,7 +190,7 @@ async def run_classification(webhook_data: dict = None, user_message: str = None
         webhook_data = get_sample_webhook_data()
     
     if user_message is None:
-        user_message = f"Analyze the commits in this GitHub webhook payload against current tasks: {json.dumps(webhook_data, indent=2)}"
+        user_message = f"Analyze this GitHub webhook commit against current tasks: {json.dumps(webhook_data, indent=2)}"
     
     session: Session = await session_service.create_session(
         app_name=task_classifier.name,
