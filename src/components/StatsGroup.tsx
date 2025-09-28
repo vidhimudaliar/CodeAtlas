@@ -2,42 +2,44 @@ import classes from './StatsGroup.module.css';
 import { Text } from '@mantine/core';
 
 interface StatsGroupProps {
-    pageViews: number;
-    newUsers: number;
-    completedOrders: number;
-  }
-  
-  export function StatsGroup({ pageViews, newUsers, completedOrders }: StatsGroupProps) {
-    const data = [
-      {
-        title: 'Page views',
-        stats: pageViews.toLocaleString(), // format numbers 
-        description: '24% more than in the same month last year, 33% more than two years ago',
-      },
-      {
-        title: 'New users',
-        stats: newUsers.toLocaleString(),
-        description: '13% less compared to last month, new user engagement up by 6%',
-      },
-      {
-        title: 'Completed orders',
-        stats: completedOrders.toLocaleString(),
-        description: 'Orders completed this month, 97% satisfaction rate',
-      },
-    ];
-  
-    const stats = data.map((stat) => (
-      <div key={stat.title} className={classes.stat}>
-        <div className={classes.count}>{stat.stats}</div>
-        <div className={classes.title}>{stat.title}</div>
-        <div className={classes.description}>{stat.description}</div>
-      </div>
-    ));
-  
-    return <div className={classes.root}>{stats}</div>;
+  tasksDone: number;
+  tasksAssigned: number;
+  numberCommits: number;
+}
 
-  }
+export function StatsGroup({ tasksDone, tasksAssigned, numberCommits }: StatsGroupProps) {
+  // calculate dynamic metrics
+  const progressPercentage = tasksAssigned ? Math.round((tasksDone / tasksAssigned) * 100) : 0;
+  const efficiency = numberCommits ? (tasksDone / numberCommits).toFixed(1) : '0';
 
-  //exmaple usage: 
-  // <StatsGroup pageViews={456133} newUsers={2175} completedOrders={1994} />
-  
+  const data = [
+    {
+      title: 'Progress',
+      stats: `${progressPercentage}%`,
+      description: `Completed ${tasksDone.toLocaleString()} tasks out of ${tasksAssigned.toLocaleString()}.`,
+    },
+    {
+      title: 'Efficiency',
+      stats: efficiency,
+      description: `Each commit completed an average of ${efficiency} tasks.`,
+    },
+    {
+      title: 'Total Commits',
+      stats: numberCommits.toLocaleString(),
+      description: `Total commits done this month.`,
+    },
+  ];
+
+  const stats = data.map((stat) => (
+    <div key={stat.title} className={classes.stat}>
+      <div className={classes.count}>{stat.stats}</div>
+      <div className={classes.title}>{stat.title}</div>
+      <div className={classes.description}>{stat.description}</div>
+    </div>
+  ));
+
+  return <div className={classes.root}>{stats}</div>;
+}
+
+// Example usage:
+// <StatsGroup tasksDone={150} tasksAssigned={200} numberCommits={50} />
