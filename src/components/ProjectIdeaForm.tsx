@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { connectGitHub } from "@/components/connect-github-button";
 
 export default function ProjectIdeaForm() {
   const [idea, setIdea] = useState("");
@@ -8,6 +9,7 @@ export default function ProjectIdeaForm() {
   const [framework, setFramework] = useState("");
   const [techStack, setTechStack] = useState<string[]>([]);
   const [repository, setRepository] = useState("");
+  const [showConnectGithub, setShowConnectGithub] = useState(false);
 
   const handleTechStackToggle = (language: string) => {
     setTechStack(prev =>
@@ -198,35 +200,139 @@ export default function ProjectIdeaForm() {
 
           {/* Repository Selection */}
           <div>
-            <label style={{
-              display: 'block',
-              color: '#495B69',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem'
-            }}>
-              Select a Repository
-            </label>
-            <select
-              value={repository}
-              onChange={(e) => setRepository(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                backgroundColor: "#FFFFFF",
-                color: "#495B69",
-                border: "1px solid #e9ecef",
-                borderRadius: "8px",
-                fontSize: "0.9rem",
-                outline: "none",
-                cursor: "pointer"
-              }}
-            >
-              <option value="">No Selection</option>
-              <option value="github">GitHub</option>
-              <option value="gitlab">GitLab</option>
-              <option value="bitbucket">Bitbucket</option>
-            </select>
+            {showConnectGithub ? (
+              <div style={{
+                backgroundColor: '#F5F5F5',
+                padding: '1rem',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+              }}>
+                <div style={{
+                  color: '#495B69',
+                  fontSize: '0.95rem',
+                  fontWeight: '500'
+                }}>
+                  Connect your GitHub account to continue
+                </div>
+                <div style={{
+                  color: '#6c757d',
+                  fontSize: '0.85rem'
+                }}>
+                  Install the CodeAtlas GitHub App on the repository you want to use. Once you return, we&apos;ll show your
+                  repositories here for selection.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => connectGitHub()}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#495B69',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    alignSelf: 'flex-start'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3a4a5c';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#495B69';
+                  }}
+                >
+                  Connect to GitHub
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConnectGithub(false)}
+                  style={{
+                    alignSelf: 'flex-start',
+                    backgroundColor: 'transparent',
+                    color: '#495B69',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: '0.85rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Back to repository selection
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '0.5rem'
+                }}>
+                  <label
+                    htmlFor="repository"
+                    style={{
+                      display: 'block',
+                      color: '#495B69',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Select a Repository
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowConnectGithub(true)}
+                    style={{
+                      padding: '0.4rem 0.75rem',
+                      backgroundColor: '#FFFFFF',
+                      color: '#495B69',
+                      border: '1px solid #495B69',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#495B69';
+                      e.currentTarget.style.color = '#FFFFFF';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.color = '#495B69';
+                    }}
+                  >
+                    Connect GitHub
+                  </button>
+                </div>
+                <select
+                  id="repository"
+                  value={repository}
+                  onChange={(e) => setRepository(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    backgroundColor: "#FFFFFF",
+                    color: "#495B69",
+                    border: "1px solid #e9ecef",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  <option value="">No Selection</option>
+                  <option value="github">GitHub</option>
+                  <option value="gitlab">GitLab</option>
+                  <option value="bitbucket">Bitbucket</option>
+                </select>
+              </>
+            )}
           </div>
         </div>
 

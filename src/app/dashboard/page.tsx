@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import ProjectIdeaForm from '@/components/ProjectIdeaForm';
+import { ConnectGitHubButton } from '@/components/connect-github-button';
 
 interface Project {
     id: number;
@@ -21,6 +22,7 @@ export default function Dashboard() {
         fetchProjects();
     }, []);
 
+   
     const fetchProjects = async () => {
         try {
             setLoading(true);
@@ -163,6 +165,7 @@ export default function Dashboard() {
                                                     height={28}
                                                 />
                                             </div>
+                                            <ConnectGitHubButton/>
 
                                             {/* Project Name */}
                                             <div style={{
