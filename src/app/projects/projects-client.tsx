@@ -115,7 +115,8 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
         borderRadius: '12px',
         border: '1px solid #e9ecef',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        overflow: 'hidden'
+        maxHeight: '70vh',
+        overflowY: 'auto'
       }}>
         {projects.length === 0 ? (
           <div style={{
