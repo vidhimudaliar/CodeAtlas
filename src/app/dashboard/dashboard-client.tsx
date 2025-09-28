@@ -87,8 +87,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
     setShowProjectForm(true);
   };
 
-  const handleProjectClick = (projectId: string) => {
-    router.push(`/projects/${projectId}`);
+  const handleProjectClick = (projectName: string) => {
+    router.push(`/projects/${projectName}`);
   };
 
   const connectButtonLabel = user.isConnectedToGithub ? "GitHub Connected" : "Connect GitHub";
@@ -254,7 +254,7 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                   .map((project, index) => (
                     <div
                       key={project.id || index}
-                      onClick={() => handleProjectClick(project.id)}
+                      onClick={() => handleProjectClick(project.name)}
                       style={{
                         display: "flex",
                         alignItems: "center",

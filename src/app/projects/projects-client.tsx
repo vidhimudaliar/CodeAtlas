@@ -189,11 +189,6 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
           </div>
         ) : (
           projects.map((project, index) => {
-            // Map project names to URL-friendly IDs
-            const getProjectId = (name: string) => {
-              return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            };
-
             return (
               <div key={`${project.id}-${index}`} style={{
                 display: 'flex',
@@ -213,7 +208,7 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
                   e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#FFFFFF' : '#F8F9FA';
                   e.currentTarget.style.transform = 'translateX(0)';
                 }}
-                onClick={() => router.push(`/projects/${getProjectId(project.name)}`)}
+                onClick={() => router.push(`/projects/${project.name}`)}
               >
                 {/* Left side - Icon and project name */}
                 <div style={{
