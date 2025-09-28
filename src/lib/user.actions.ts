@@ -1,4 +1,5 @@
 import { createSupabaseClient } from "./utils/supabase/server";
+import type { InstallationRepository } from "./github/actions";
 
 
 /**
@@ -21,6 +22,24 @@ export async function getUserById(
     }
 
     return data;
+}
+
+
+export async function getUserRepositories(
+    id: string
+): Promise<InstallationRepository[]> {
+    const supabase = await createSupabaseClient();
+    const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('owner_user_id', id)
+
+    if (error) {
+        throw error;
+    }
+
+    const repositories = data
+    return repositories ?? [];
 }
 
 

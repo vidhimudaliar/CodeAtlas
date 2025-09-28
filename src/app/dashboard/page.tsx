@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./dashboard-client";
-import { createSupabaseClient } from "@/lib/utils/supabase/server";
-import getUserById from "@/lib/user.actions";
+import getUserById, { getUserRepositories } from "@/lib/user.actions";
 
 export default async function DashboardPage() {
     const user = await getUserById();
 
-    console.log("user", user)
     if (!user) {
         redirect("/connect-github");
     }
+
+    const user_repository = await getUserRepositories(user.id);
 
     return (
         <DashboardClient
@@ -21,6 +21,7 @@ export default async function DashboardPage() {
                 createdAt: user.created_at,
                 updatedAt: user.updated_at,
             }}
+            user_repository={user_repository}
         />
     );
 }

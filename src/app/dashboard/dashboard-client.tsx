@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import ProjectIdeaForm from "@/components/ProjectIdeaForm";
 import { connectGitHub } from "@/components/connect-github-button";
 
@@ -14,51 +14,67 @@ interface DashboardUser {
   updatedAt: string;
 }
 
-interface Project {
-  id: number;
+export interface DashboardRepository {
+  id: string;
+  owner: string;
+  repo: string;
+  title: string;
+  created_at: string;
+  owner_user_id: string;
+  installation_id: number | null;
+  default_branch: string | null;
+  private: boolean | null;
+  last_synced_at: string | null;
+}
+
+interface ProjectListItem {
+  id: string;
   name: string;
   visibility: "Public" | "Private";
   lastUpdated: string;
+  sortTimestamp: number;
 }
 
-interface DashboardClientProps {
+export interface DashboardClientProps {
   user: DashboardUser;
+  user_repository: DashboardRepository[];
 }
 
-export function DashboardClient({ user }: DashboardClientProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function formatRepositoryDate(dateInput: string | null): string {
+  if (!dateInput) {
+    return "Not synced";
+  }
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) {
+    return "Not synced";
+  }
+  return date.toLocaleString();
+}
+
+export function DashboardClient({ user, user_repository }: DashboardClientProps) {
   const [showProjectForm, setShowProjectForm] = useState(false);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const projects = useMemo<ProjectListItem[]>(() => {
+    return user_repository.map((repo) => {
+      const sourceDate = repo.last_synced_at ?? repo.created_at;
+      const parsed = sourceDate ? new Date(sourceDate).getTime() : 0;
+      return {
+        id: repo.id,
+        name: repo.title || repo.repo,
+        visibility: repo.private ? "Private" : "Public",
+        lastUpdated: formatRepositoryDate(sourceDate),
+        sortTimestamp: Number.isNaN(parsed) ? 0 : parsed,
+      };
+    });
+  }, [user_repository]);
 
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/projects");
-      const data = await response.json();
-
-      if (data.success) {
-        setProjects(data.projects);
-        setError(null);
-      } else {
-        setError(data.error || "Failed to fetch projects");
-      }
-    } catch (err) {
-      setError("Failed to fetch projects");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = false;
+  const error: string | null = null;
 
   const handleConnectGithub = () => {
-    if (user.isConnectedToGithub) {
-      return;
+    if (!user.isConnectedToGithub) {
+      connectGitHub();
     }
-    connectGitHub();
   };
 
   const handleCreateProjectClick = () => {
@@ -68,70 +84,62 @@ export function DashboardClient({ user }: DashboardClientProps) {
     }
     setShowProjectForm(true);
   };
-
   const connectButtonLabel = user.isConnectedToGithub ? "GitHub Connected" : "Connect GitHub";
 
   return (
     <>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
-        gap: "0.5rem",
-        marginBottom: "1.5rem",
-      }}>
-        <div>
-          <h1 style={{
-            color: "#495B69",
-            fontSize: "1.75rem",
-            fontWeight: "600",
-            marginBottom: "0.25rem",
-          }}>
-            Dashboard
-          </h1>
-          <p style={{
-            color: "#6c757d",
-            margin: 0,
-            fontSize: "0.95rem",
-          }}>
-            Welcome back, {user.name ?? "there"}
-          </p>
-        </div>
-      </div>
+      <h1
+        style={{
+          color: "#495B69",
+          marginBottom: "1.5rem",
+          fontSize: "1.75rem",
+          fontWeight: "600",
+        }}
+      >
+        Dashboard
+      </h1>
 
       {/* Main Cards */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-        width: "100%",
-        maxWidth: "100%",
-        height: "calc(100vh - 120px)",
-      }}>
-        {/* Your Projects Card */}
-        <div style={{
-          backgroundColor: "#FFFFFF",
-          padding: "0.75rem",
-          borderRadius: "16px",
-          border: "1px solid #e9ecef",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          flex: "1",
+      <div
+        style={{
           display: "flex",
           flexDirection: "column",
-          minHeight: 0,
-        }}>
-          <div style={{
+          gap: "1rem",
+          width: "100%",
+          maxWidth: "100%",
+          height: "calc(100vh - 120px)",
+        }}
+      >
+        {/* Your Projects Card */}
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "0.75rem",
+            borderRadius: "16px",
+            border: "1px solid #e9ecef",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            flex: "1",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "0.75rem",
-          }}>
-            <h2 style={{
-              color: "#495B69",
-              margin: 10,
-              fontSize: "1.5rem",
-              fontWeight: "600",
-            }}>
+            flexDirection: "column",
+            minHeight: 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <h2
+              style={{
+                color: "#495B69",
+                margin: 10,
+                fontSize: "1.5rem",
+                fontWeight: "600",
+              }}
+            >
               Your Projects
             </h2>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -188,89 +196,99 @@ export function DashboardClient({ user }: DashboardClientProps) {
           </div>
 
           {loading ? (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: 1,
-            }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+              }}
+            >
               <p style={{ color: "#6c757d" }}>Loading projects...</p>
             </div>
           ) : error ? (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: 1,
-            }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+              }}
+            >
               <p style={{ color: "#dc3545" }}>Error: {error}</p>
             </div>
           ) : projects.length > 0 ? (
             // Projects List View
             <>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                overflowY: "auto",
-                paddingRight: "0.5rem",
-                minHeight: 0,
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  overflowY: "auto",
+                  paddingRight: "0.5rem",
+                  minHeight: 0,
+                }}
+              >
                 {projects
-                  .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
+                  .sort((a, b) => b.sortTimestamp - a.sortTimestamp)
                   .slice(0, 4)
                   .map((project, index) => (
-                    <div key={project.id} style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0.8rem 0.5rem",
-                      backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F5F5F5",
-                      gap: "0.5rem",
-                      minHeight: "40px",
-                      borderRadius: "4px",
-                      marginBottom: "2px",
-                    }}>
-                      {/* Folder Icon */}
-                      <div style={{
-                        width: "32px",
-                        height: "28px",
+                    <div
+                      key={project.id || index}
+                      style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}>
-                        <Image
-                          src="/folder-icon.svg"
-                          alt="Folder"
-                          width={32}
-                          height={28}
-                        />
+                        padding: "0.8rem 0.5rem",
+                        backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F5F5F5",
+                        gap: "0.5rem",
+                        minHeight: "40px",
+                        borderRadius: "4px",
+                        marginBottom: "2px",
+                      }}
+                    >
+                      {/* Folder Icon */}
+                      <div
+                        style={{
+                          width: "32px",
+                          height: "28px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Image src="/folder-icon.svg" alt="Folder" width={32} height={28} />
                       </div>
 
                       {/* Project Name */}
-                      <div style={{
-                        color: "#495B69",
-                        fontSize: "1.1rem",
-                        fontWeight: "500",
-                        minWidth: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}>
+                      <div
+                        style={{
+                          color: "#495B69",
+                          fontSize: "1.1rem",
+                          fontWeight: "500",
+                          minWidth: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {project.name}
                       </div>
 
                       {/* Visibility Tag */}
-                      <div style={{
-                        backgroundColor: "#AAD9DF",
-                        color: "#FFFFFF",
-                        padding: "0.2rem 0.8rem",
-                        borderRadius: "6px",
-                        fontSize: "0.75rem",
-                        fontWeight: "500",
-                        flexShrink: 0,
-                        marginLeft: "1.25rem",
-                      }}>
+                      <div
+                        style={{
+                          backgroundColor: "#AAD9DF",
+                          color: "#FFFFFF",
+                          padding: "0.2rem 0.8rem",
+                          borderRadius: "6px",
+                          fontSize: "0.75rem",
+                          fontWeight: "500",
+                          flexShrink: 0,
+                          marginLeft: "1.25rem",
+                        }}
+                      >
                         {project.visibility}
                       </div>
 
@@ -278,13 +296,15 @@ export function DashboardClient({ user }: DashboardClientProps) {
                       <div style={{ flex: 1 }}></div>
 
                       {/* Last Updated */}
-                      <div style={{
-                        color: "#6c757d",
-                        fontSize: "0.9rem",
-                        minWidth: "140px",
-                        textAlign: "right",
-                        flexShrink: 0,
-                      }}>
+                      <div
+                        style={{
+                          color: "#6c757d",
+                          fontSize: "0.9rem",
+                          minWidth: "140px",
+                          textAlign: "right",
+                          flexShrink: 0,
+                        }}
+                      >
                         Last updated on {project.lastUpdated}
                       </div>
                     </div>
@@ -293,42 +313,39 @@ export function DashboardClient({ user }: DashboardClientProps) {
             </>
           ) : (
             // Empty State View
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "1rem",
-              flex: 1,
-              justifyContent: "center",
-            }}>
-              <Image
-                src="/project-large-icon.svg"
-                alt="Projects"
-                width={60}
-                height={60}
-              />
-              <p style={{
-                color: "#495B69",
-                margin: "0",
-                fontSize: "0.9rem",
-                textAlign: "center",
-              }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "1rem",
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <Image src="/project-large-icon.svg" alt="Projects" width={60} height={60} />
+              <p
+                style={{
+                  color: "#495B69",
+                  margin: "0",
+                  fontSize: "0.9rem",
+                  textAlign: "center",
+                }}
+              >
                 Create your first project
               </p>
               <button
                 onClick={handleCreateProjectClick}
-                disabled={!user.isConnectedToGithub}
                 style={{
-                  backgroundColor: user.isConnectedToGithub ? "#495B69" : "#E0E0E0",
+                  backgroundColor: "#495B69",
                   color: "#FFFFFF",
                   border: "none",
                   padding: "0.6rem 1.2rem",
                   borderRadius: "8px",
                   fontSize: "0.9rem",
                   fontWeight: "500",
-                  cursor: user.isConnectedToGithub ? "pointer" : "not-allowed",
+                  cursor: "pointer",
                   transition: "all 0.2s ease",
-                  opacity: user.isConnectedToGithub ? 1 : 0.7,
                 }}
               >
                 Create a Project
@@ -338,46 +355,49 @@ export function DashboardClient({ user }: DashboardClientProps) {
         </div>
 
         {/* Your Contributions Card */}
-        <div style={{
-          backgroundColor: "#FFFFFF",
-          padding: "1rem",
-          borderRadius: "12px",
-          border: "1px solid #e9ecef",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          flex: "1",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-        }}>
-          <h2 style={{
-            color: "#495B69",
-            marginBottom: "1rem",
-            fontSize: "1.25rem",
-            fontWeight: "600",
-          }}>
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "1rem",
+            borderRadius: "12px",
+            border: "1px solid #e9ecef",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            flex: "1",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+          }}
+        >
+          <h2
+            style={{
+              color: "#495B69",
+              marginBottom: "1rem",
+              fontSize: "1.25rem",
+              fontWeight: "600",
+            }}
+          >
             Your Contributions
           </h2>
 
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "1rem",
-            flex: 1,
-            justifyContent: "center",
-          }}>
-            <Image
-              src="/contribution-large-icon.svg"
-              alt="Contributions"
-              width={60}
-              height={60}
-            />
-            <p style={{
-              color: "#495B69",
-              margin: "0",
-              fontSize: "0.9rem",
-              textAlign: "center",
-            }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "1rem",
+              flex: 1,
+              justifyContent: "center",
+            }}
+          >
+            <Image src="/contribution-large-icon.svg" alt="Contributions" width={60} height={60} />
+            <p
+              style={{
+                color: "#495B69",
+                margin: "0",
+                fontSize: "0.9rem",
+                textAlign: "center",
+              }}
+            >
               Find your first contribution
             </p>
             <button
@@ -401,43 +421,51 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
       {/* Project Form Modal */}
       {showProjectForm && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            backgroundColor: "#AAD9DF",
-            borderRadius: "16px",
-            padding: "0",
-            maxWidth: "500px",
-            width: "90%",
-            maxHeight: "80vh",
-            overflow: "auto",
-            position: "relative",
-          }}>
-            {/* Header */}
-            <div style={{
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
               backgroundColor: "#AAD9DF",
-              padding: "1.5rem 2rem 1rem 2rem",
-              borderTopLeftRadius: "16px",
-              borderTopRightRadius: "16px",
+              borderRadius: "16px",
+              padding: "0",
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "80vh",
+              overflow: "auto",
               position: "relative",
-            }}>
-              <h2 style={{
-                color: "#495B69",
-                fontSize: "1.5rem",
-                fontWeight: "600",
-                margin: 0,
-                textAlign: "center",
-              }}>
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                backgroundColor: "#AAD9DF",
+                padding: "1.5rem 2rem 1rem 2rem",
+                borderTopLeftRadius: "16px",
+                borderTopRightRadius: "16px",
+                position: "relative",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#495B69",
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  margin: 0,
+                  textAlign: "center",
+                }}
+              >
                 Enter your Project Idea
               </h2>
               <button
@@ -458,13 +486,15 @@ export function DashboardClient({ user }: DashboardClientProps) {
             </div>
 
             {/* Body */}
-            <div style={{
-              backgroundColor: "#FFFFFF",
-              padding: "2rem",
-              borderBottomLeftRadius: "16px",
-              borderBottomRightRadius: "16px",
-            }}>
-              <ProjectIdeaForm />
+            <div
+              style={{
+                backgroundColor: "#FFFFFF",
+                padding: "2rem",
+                borderBottomLeftRadius: "16px",
+                borderBottomRightRadius: "16px",
+              }}
+            >
+              <ProjectIdeaForm user={user} repositories={user_repository} />
             </div>
           </div>
         </div>
