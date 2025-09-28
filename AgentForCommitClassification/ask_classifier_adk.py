@@ -69,6 +69,30 @@ def get_tasks_from_supabase(project_id: str = None) -> dict:
         "relations": []
     }
 
+def update_node_status(project_id: str, node_id: str, new_status: str) -> dict:
+    """
+    Update the status of a node in the Supabase database.
+    Valid statuses: 'todo', 'doing', 'done'
+    """
+    if not supabase or not project_id or not node_id:
+        return {"success": False, "error": "Missing required parameters"}
+    
+    if new_status not in ['todo', 'doing', 'done']:
+        return {"success": False, "error": f"Invalid status: {new_status}. Must be 'todo', 'doing', or 'done'"}
+    
+    try:
+        response = supabase.table("nodes").update({
+            "status": new_status
+        }).eq("project_id", project_id).eq("node_id", node_id).execute()
+        
+        if response.data:
+            return {"success": True, "updated_node": response.data[0]}
+        else:
+            return {"success": False, "error": "Node not found or no changes made"}
+            
+    except Exception as e:
+        return {"success": False, "error": f"Database error: {str(e)}"}
+
 # ---------------------------
 # 2) Get the commit from the webhook
 # ---------------------------
@@ -220,9 +244,9 @@ def get_sample_webhook_data() -> dict:
 task_classifier = Agent(
     name="task_classifier",
     model="gemini-2.5-flash",  # fast + cheap; upgrade to pro if needed
-    description="Classifies whether GitHub webhook events correspond to known tasks by analyzing webhook data against Supabase nodes and edges.",
+    description="Classifies whether GitHub webhook events correspond to known tasks by analyzing webhook data against Supabase nodes and edges, and updates node status when tasks are completed.",
     instruction="""
-You are a JSON generator that analyzes GitHub webhook events against project nodes (tasks). You MUST:
+You are a JSON generator that analyzes GitHub webhook events against project nodes (tasks) and updates task status when completed. You MUST:
 1) Call get_project_id_from_webhook to identify the project from webhook data.
 2) Call get_tasks_from_supabase with the project_id to load current nodes, edges, and relations.
 3) Call get_webhook_data to extract relevant information from webhook data.
@@ -234,7 +258,8 @@ You are a JSON generator that analyzes GitHub webhook events against project nod
    - Look for node ID references in any text content
    - Match keywords to node names and types
    - Consider hierarchical relationships from edges
-5) Return ONLY JSON following this schema (no extra text):
+5) If you determine a task is completed (was_task=true and confidence > 0.7), call update_node_status to set the node status to "done"
+6) Return ONLY JSON following this schema (no extra text):
 
 {
   "event_type": "string",
@@ -242,6 +267,7 @@ You are a JSON generator that analyzes GitHub webhook events against project nod
   "matched_node_id": "string or null",
   "reason": "short explanation",
   "confidence": 0.0-1.0,
+  "status_updated": true | false,
   "relevant_data": {
     "sha": "string (for commits)",
     "number": "string (for PRs/issues)",
@@ -260,8 +286,10 @@ Analysis Rules:
 - Include confidence score based on match strength
 - Keep 'reason' concise but informative
 - Include relevant data from the webhook event
+- When was_task=true and confidence > 0.7, automatically update the node status to "done"
+- Set status_updated=true if you successfully updated a node status
 """,
-    tools=[get_tasks_from_supabase, get_webhook_data, get_project_id_from_webhook]
+    tools=[get_tasks_from_supabase, get_webhook_data, get_project_id_from_webhook, update_node_status]
 )
 
 # ---------------------------
@@ -380,8 +408,8 @@ if __name__ == "__main__":
             }
         }
 
-    if not os.getenv("GOOGLE_API_KEY"):
+        if not os.getenv("GOOGLE_API_KEY"):
         print("Set GOOGLE_API_KEY env var to use the agent.")
-    else:
+        else:
         result = asyncio.run(run_classification(webhook_data))
-        print(result)
+            print(result)
