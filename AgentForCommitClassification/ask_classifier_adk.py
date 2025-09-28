@@ -31,7 +31,7 @@ if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ---------------------------
-# 1) Static-data tool (stub now, GET later)
+# 1) Get the task from subabase
 # ---------------------------
 
 def get_tasks_from_supabase(project_id: str = None) -> dict:
@@ -63,43 +63,74 @@ def get_tasks_from_supabase(project_id: str = None) -> dict:
             # Fallback to static data
             pass
     
-    # Fallback static data for testing
     return {
-        "tasks": [
-            {"node_id": "T-42", "name": "Add login button", "type": "feature", "status": "todo", "level": 2},
-            {"node_id": "T-77", "name": "Fix 500 on /signup", "type": "bug", "status": "todo", "level": 3},
-            {"node_id": "T-88", "name": "Refactor email sender", "type": "task", "status": "done", "level": 3},
-            {"node_id": "T-99", "name": "Add agency client component", "type": "feature", "status": "todo", "level": 2},
-        ],
+        "tasks": [],
         "edges": [],
         "relations": []
     }
 
 # ---------------------------
-# 2) GitHub webhook data parser
+# 2) Get the commit from the webhook
 # ---------------------------
 
-def get_webhook_commit(webhook_data: dict) -> dict:
+def get_webhook_data(webhook_data: dict) -> dict:
     """
-    Extract the commit from GitHub webhook payload.
-    Returns the raw commit data from the webhook.
+    Extract relevant information from GitHub webhook payload.
+    Returns structured data based on the webhook event type.
     """
-    if webhook_data.get("event") == "push" and "payload" in webhook_data:
-        payload = webhook_data["payload"]
-        commits = payload.get("commits", [])
-        
-        # Return the first commit (webhooks typically have one commit per push)
-        if commits:
-            return commits[0]
+    if not webhook_data.get("payload"):
+        return {}
     
-    return {}
+    payload = webhook_data["payload"]
+    event_type = webhook_data.get("event", "")
+    
+    result = {
+        "event_type": event_type,
+        "repository": payload.get("repository", {}),
+        "sender": payload.get("sender", {}),
+        "action": payload.get("action", ""),
+        "timestamp": payload.get("head_commit", {}).get("timestamp") or payload.get("created_at"),
+    }
+    
+    # Handle different event types
+    if event_type == "push":
+        commits = payload.get("commits", [])
+        result["commits"] = commits
+        result["head_commit"] = payload.get("head_commit", {})
+        result["ref"] = payload.get("ref", "")
+        result["before"] = payload.get("before", "")
+        result["after"] = payload.get("after", "")
+        
+        # Return the first commit for analysis (most common case)
+        if commits:
+            result["primary_commit"] = commits[0]
+    
+    elif event_type == "pull_request":
+        result["pull_request"] = payload.get("pull_request", {})
+        result["number"] = payload.get("number", "")
+        result["title"] = payload.get("pull_request", {}).get("title", "")
+        result["body"] = payload.get("pull_request", {}).get("body", "")
+    
+    elif event_type == "issues":
+        result["issue"] = payload.get("issue", {})
+        result["number"] = payload.get("number", "")
+        result["title"] = payload.get("issue", {}).get("title", "")
+        result["body"] = payload.get("issue", {}).get("body", "")
+    
+    elif event_type == "issue_comment":
+        result["issue"] = payload.get("issue", {})
+        result["comment"] = payload.get("comment", {})
+        result["number"] = payload.get("issue", {}).get("number", "")
+    
+    return result
 
 def get_project_id_from_webhook(webhook_data: dict) -> str:
     """
     Extract project identifier from webhook data.
     Uses repository owner/name to identify the project.
+    Works for both owners and contributors.
     """
-    if webhook_data.get("event") == "push" and "payload" in webhook_data:
+    if "payload" in webhook_data:
         payload = webhook_data["payload"]
         repo = payload.get("repository", {})
         owner = repo.get("owner", {}).get("login", "")
@@ -189,39 +220,48 @@ def get_sample_webhook_data() -> dict:
 task_classifier = Agent(
     name="task_classifier",
     model="gemini-2.5-flash",  # fast + cheap; upgrade to pro if needed
-    description="Classifies whether a commit corresponds to a known task by analyzing GitHub webhook data against Supabase nodes and edges.",
+    description="Classifies whether GitHub webhook events correspond to known tasks by analyzing webhook data against Supabase nodes and edges.",
     instruction="""
-You are a JSON generator that analyzes a single GitHub commit against project nodes (tasks). You MUST:
+You are a JSON generator that analyzes GitHub webhook events against project nodes (tasks). You MUST:
 1) Call get_project_id_from_webhook to identify the project from webhook data.
 2) Call get_tasks_from_supabase with the project_id to load current nodes, edges, and relations.
-3) Call get_webhook_commit to extract the commit from webhook data.
-4) Analyze the commit against nodes:
-   - Commit message content and keywords
-   - File changes (added/modified/removed files)
-   - Node names and types
-   - Node IDs mentioned in commit messages
+3) Call get_webhook_data to extract relevant information from webhook data.
+4) Analyze the webhook event against nodes based on event type:
+   - For PUSH events: analyze commit messages, file changes, and commit content
+   - For PULL_REQUEST events: analyze PR title, body, and changes
+   - For ISSUES events: analyze issue title, body, and labels
+   - For ISSUE_COMMENT events: analyze comment content and related issue
+   - Look for node ID references in any text content
+   - Match keywords to node names and types
    - Consider hierarchical relationships from edges
 5) Return ONLY JSON following this schema (no extra text):
 
 {
-  "sha": "string",
+  "event_type": "string",
   "was_task": true | false,
   "matched_node_id": "string or null",
   "reason": "short explanation",
-  "confidence": 0.0-1.0
+  "confidence": 0.0-1.0,
+  "relevant_data": {
+    "sha": "string (for commits)",
+    "number": "string (for PRs/issues)",
+    "title": "string",
+    "content": "string"
+  }
 }
 
 Analysis Rules:
-- Look for exact node ID references in commit messages (e.g., "T-42", "fixes #123")
-- Match commit message keywords to node names and types
-- Consider file paths that relate to node functionality
+- Look for exact node ID references in any text content (e.g., "T-42", "fixes #123")
+- Match content keywords to node names and types
+- Consider file paths and changes that relate to node functionality
 - Use edges to understand parent-child relationships
 - Prefer precision over recall - only mark as task-related if confident
 - If unsure, set was_task=false and matched_node_id=null
 - Include confidence score based on match strength
 - Keep 'reason' concise but informative
+- Include relevant data from the webhook event
 """,
-    tools=[get_tasks_from_supabase, get_webhook_commit, get_project_id_from_webhook]
+    tools=[get_tasks_from_supabase, get_webhook_data, get_project_id_from_webhook]
 )
 
 # ---------------------------
@@ -239,7 +279,7 @@ async def run_classification(webhook_data: dict = None, user_message: str = None
         webhook_data = get_sample_webhook_data()
     
     if user_message is None:
-        user_message = f"Analyze this GitHub webhook commit against current tasks: {json.dumps(webhook_data, indent=2)}"
+        user_message = f"Analyze this GitHub webhook event against current tasks: {json.dumps(webhook_data, indent=2)}"
     
     session: Session = await session_service.create_session(
         app_name=task_classifier.name,
