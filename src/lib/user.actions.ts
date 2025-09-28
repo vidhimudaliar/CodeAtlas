@@ -1,5 +1,17 @@
 import { createSupabaseClient } from "./utils/supabase/server";
-import type { InstallationRepository } from "./github/actions";
+
+export interface DatabaseRepository {
+  id: string;
+  owner: string;
+  repo: string;
+  title: string;
+  created_at: string;
+  owner_user_id: string;
+  installation_id: number | null;
+  default_branch: string | null;
+  private: boolean | null;
+  last_synced_at: string | null;
+}
 
 
 /**
@@ -27,7 +39,7 @@ export async function getUserById(
 
 export async function getUserRepositories(
     id: string
-): Promise<InstallationRepository[]> {
+): Promise<DatabaseRepository[]> {
     const supabase = await createSupabaseClient();
     const { data, error } = await supabase
         .from('projects')
