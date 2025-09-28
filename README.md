@@ -26,7 +26,7 @@ With CodeAtlas, you get a lightweight AI assistant that simplifies project manag
 ## 🛠️ Tech Stack  
 - **Frontend:** React, CSS
 - **Backend:** Next.js (API routes)  
-- **Database:** Supabase (PostgreSQL_
+- **Database:** Supabase (PostgreSQL)
 - **Authentication:** Github OAuth 
 - **AI Agent:** Google Agent Development kit, Google Gemini API 
 
