@@ -1044,34 +1044,6 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button
-                        onClick={() => setShowAddTaskModal(true)}
-                        style={{
-                            backgroundColor: 'transparent',
-                            color: '#495B69',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: '2px dashed #e9ecef',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            fontWeight: '300',
-                            marginBottom: '0.5rem',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.borderColor = '#495B69';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#e9ecef';
-                        }}
-                    >
-                        +
-                    </button>
                     {kanbanData.todo.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1157,34 +1129,6 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button
-                        onClick={() => setShowAddTaskModal(true)}
-                        style={{
-                            backgroundColor: 'transparent',
-                            color: '#495B69',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: '2px dashed #e9ecef',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            fontWeight: '300',
-                            marginBottom: '0.5rem',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.borderColor = '#495B69';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#e9ecef';
-                        }}
-                    >
-                        +
-                    </button>
                     {kanbanData.inProgress.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1270,34 +1214,6 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button
-                        onClick={() => setShowAddTaskModal(true)}
-                        style={{
-                            backgroundColor: 'transparent',
-                            color: '#495B69',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: '2px dashed #e9ecef',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            fontWeight: '300',
-                            marginBottom: '0.5rem',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.borderColor = '#495B69';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#e9ecef';
-                        }}
-                    >
-                        +
-                    </button>
                     {kanbanData.testing.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1383,34 +1299,6 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button
-                        onClick={() => setShowAddTaskModal(true)}
-                        style={{
-                            backgroundColor: 'transparent',
-                            color: '#495B69',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: '2px dashed #e9ecef',
-                            cursor: 'pointer',
-                            fontSize: '1.5rem',
-                            fontWeight: '300',
-                            marginBottom: '0.5rem',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.borderColor = '#495B69';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#e9ecef';
-                        }}
-                    >
-                        +
-                    </button>
                     {kanbanData.done.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1511,56 +1399,84 @@ export default function DynamicProjectPage() {
                 {/* Tabs */}
                 <div style={{
                     display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     gap: '2rem',
                     marginBottom: '0.1rem',
                     borderBottom: '1px solid #495B69',
                     paddingBottom: '0rem'
                 }}>
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                backgroundColor: activeTab === tab.id ? '#F5F5F5' : 'transparent',
-                                border: 'none',
-                                borderBottom: activeTab === tab.id ? '3px solid #495B69' : 'none',
-                                color: '#495B69',
-                                fontSize: '1.125rem',
-                                fontWeight: activeTab === tab.id ? '600' : '400',
-                                cursor: 'pointer',
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: activeTab === tab.id ? '6px 6px 0 0' : '6px',
-                                transition: 'all 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (activeTab !== tab.id) {
-                                    setHoveredTab(tab.id);
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.transform = 'translateY(-1px)';
-                                    e.currentTarget.style.fontWeight = '600';
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (activeTab !== tab.id) {
-                                    setHoveredTab(null);
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.fontWeight = '400';
-                                }
-                            }}
-                        >
-                            <Image
-                                src={`/${activeTab === tab.id || hoveredTab === tab.id ? tab.iconBold : tab.icon}`}
-                                alt={tab.label}
-                                width={22}
-                                height={22}
-                            />
-                            {tab.label}
-                        </button>
-                    ))}
+                    <div style={{ display: 'flex', gap: '2rem' }}>
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    backgroundColor: activeTab === tab.id ? '#F5F5F5' : 'transparent',
+                                    border: 'none',
+                                    borderBottom: activeTab === tab.id ? '3px solid #495B69' : 'none',
+                                    color: '#495B69',
+                                    fontSize: '1.125rem',
+                                    fontWeight: activeTab === tab.id ? '600' : '400',
+                                    cursor: 'pointer',
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: activeTab === tab.id ? '6px 6px 0 0' : '6px',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (activeTab !== tab.id) {
+                                        setHoveredTab(tab.id);
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.fontWeight = '600';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (activeTab !== tab.id) {
+                                        setHoveredTab(null);
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.fontWeight = '400';
+                                    }
+                                }}
+                            >
+                                <Image
+                                    src={`/${activeTab === tab.id || hoveredTab === tab.id ? tab.iconBold : tab.icon}`}
+                                    alt={tab.label}
+                                    width={22}
+                                    height={22}
+                                />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Add Task Button */}
+                    <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        style={{
+                            backgroundColor: '#495B69',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            transition: 'background-color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5A6E7F'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#495B69'}
+                    >
+                        <span style={{ fontSize: '1rem' }}>+</span>
+                        Add Task
+                    </button>
                 </div>
             </div>
 
