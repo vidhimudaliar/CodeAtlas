@@ -17,6 +17,9 @@ export default function DynamicProjectPage() {
     const [statsLoading, setStatsLoading] = useState(true);
     const [draggedTask, setDraggedTask] = useState<any>(null);
     const [draggedSubtask, setDraggedSubtask] = useState<any>(null);
+    const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [selectedColumn, setSelectedColumn] = useState<'todo' | 'inProgress' | 'testing' | 'done'>('todo');
     const [kanbanData, setKanbanData] = useState({
         todo: [
             {
@@ -289,6 +292,30 @@ export default function DynamicProjectPage() {
         setKanbanData(newKanbanData);
 
         setDraggedSubtask(null);
+    };
+
+    const handleAddTask = () => {
+        const title = newTaskTitle.trim();
+        if (!title) return;
+
+        const newId = Math.max(0, ...Object.values(kanbanData).flat().map(task => task.id)) + 1;
+
+        const newTask = {
+            id: newId,
+            title: title,
+            labels: [],
+            description: '',
+            subtasks: { todo: [], inProgress: [], testing: [], done: [] },
+        };
+
+        setKanbanData(prevData => ({
+            ...prevData,
+            [selectedColumn]: [...prevData[selectedColumn], newTask],
+        }));
+
+        setNewTaskTitle('');
+        setSelectedColumn('todo');
+        setShowAddTaskModal(false);
     };
 
     const renderTaskModal = () => {
@@ -827,6 +854,155 @@ export default function DynamicProjectPage() {
         );
     };
 
+    const renderAddTaskModal = () => {
+        if (!showAddTaskModal) return null;
+
+        return (
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1001,
+                padding: '2rem'
+            }}>
+                <div style={{
+                    backgroundColor: 'white',
+                    borderRadius: '12px',
+                    width: '100%',
+                    maxWidth: '500px',
+                    padding: '2rem',
+                    position: 'relative'
+                }}>
+                    <h2 style={{
+                        color: '#495B69',
+                        margin: '0 0 1.5rem 0',
+                        fontSize: '1.5rem',
+                        fontWeight: '600'
+                    }}>
+                        Add New Task
+                    </h2>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{
+                            display: 'block',
+                            color: '#495B69',
+                            marginBottom: '0.5rem',
+                            fontSize: '1rem',
+                            fontWeight: '500'
+                        }}>
+                            Task Title
+                        </label>
+                        <input
+                            type="text"
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            placeholder="Enter task title..."
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e9ecef',
+                                fontSize: '1rem',
+                                color: '#495B69',
+                                backgroundColor: '#F8F8F8',
+                                boxSizing: 'border-box'
+                            }}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleAddTask();
+                                }
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{
+                            display: 'block',
+                            color: '#495B69',
+                            marginBottom: '0.5rem',
+                            fontSize: '1rem',
+                            fontWeight: '500'
+                        }}>
+                            Add to Column
+                        </label>
+                        <select
+                            value={selectedColumn}
+                            onChange={(e) => setSelectedColumn(e.target.value as any)}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e9ecef',
+                                fontSize: '1rem',
+                                color: '#495B69',
+                                backgroundColor: '#F8F8F8',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            <option value="todo">TO DO</option>
+                            <option value="inProgress">IN PROGRESS</option>
+                            <option value="testing">TESTING</option>
+                            <option value="done">DONE</option>
+                        </select>
+                    </div>
+
+                    <div style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button
+                            onClick={() => setShowAddTaskModal(false)}
+                            style={{
+                                backgroundColor: 'transparent',
+                                color: '#495B69',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e9ecef',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: '500',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleAddTask}
+                            style={{
+                                backgroundColor: '#495B69',
+                                color: 'white',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                transition: 'background-color 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5A6E7F'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#495B69'}
+                        >
+                            Add Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderBoard = () => (
         <div style={{
             display: 'grid',
@@ -868,6 +1044,34 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        style={{
+                            backgroundColor: 'transparent',
+                            color: '#495B69',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '2px dashed #e9ecef',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            fontWeight: '300',
+                            marginBottom: '0.5rem',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.borderColor = '#495B69';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.borderColor = '#e9ecef';
+                        }}
+                    >
+                        +
+                    </button>
                     {kanbanData.todo.map((task) => (
                         <div key={task.id}
                             draggable
@@ -953,6 +1157,34 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        style={{
+                            backgroundColor: 'transparent',
+                            color: '#495B69',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '2px dashed #e9ecef',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            fontWeight: '300',
+                            marginBottom: '0.5rem',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.borderColor = '#495B69';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.borderColor = '#e9ecef';
+                        }}
+                    >
+                        +
+                    </button>
                     {kanbanData.inProgress.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1038,6 +1270,34 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        style={{
+                            backgroundColor: 'transparent',
+                            color: '#495B69',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '2px dashed #e9ecef',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            fontWeight: '300',
+                            marginBottom: '0.5rem',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.borderColor = '#495B69';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.borderColor = '#e9ecef';
+                        }}
+                    >
+                        +
+                    </button>
                     {kanbanData.testing.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1123,6 +1383,34 @@ export default function DynamicProjectPage() {
                     </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                        onClick={() => setShowAddTaskModal(true)}
+                        style={{
+                            backgroundColor: 'transparent',
+                            color: '#495B69',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '2px dashed #e9ecef',
+                            cursor: 'pointer',
+                            fontSize: '1.5rem',
+                            fontWeight: '300',
+                            marginBottom: '0.5rem',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.borderColor = '#495B69';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.borderColor = '#e9ecef';
+                        }}
+                    >
+                        +
+                    </button>
                     {kanbanData.done.map((task) => (
                         <div key={task.id}
                             draggable
@@ -1309,6 +1597,9 @@ export default function DynamicProjectPage() {
 
             {/* Task Modal */}
             {renderTaskModal()}
+
+            {/* Add Task Modal */}
+            {renderAddTaskModal()}
 
             {/* Subtask Side Panel */}
             {renderSubtaskSidePanel()}
