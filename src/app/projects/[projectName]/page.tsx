@@ -10,49 +10,13 @@ export default function DynamicProjectPage() {
     const params = useParams();
     const projectName = params.projectName as string;
     const [activeTab, setActiveTab] = useState('board');
+    const [hoveredTab, setHoveredTab] = useState<string | null>(null);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [selectedSubtask, setSelectedSubtask] = useState<any>(null);
     const [stats, setStats] = useState({ tasksDone: 0, tasksAssigned: 0, numberCommits: 0 });
     const [statsLoading, setStatsLoading] = useState(true);
-
-    const tabs = [
-        { id: 'summary', label: 'Summary', icon: 'summary-icon.svg', iconBold: 'summary-icon-bold.svg' },
-        { id: 'board', label: 'Board', icon: 'board-icon.svg', iconBold: 'board-icon-bold.svg' },
-        { id: 'overview', label: 'Overview', icon: 'overview-icon.svg', iconBold: 'overview-icon-bold.svg' },
-        { id: 'code', label: 'Code', icon: 'code-icon.svg', iconBold: 'code-icon-bold.svg' }
-    ];
-
-    // Fetch stats when component mounts
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                setStatsLoading(true);
-                console.log('Fetching stats for project:', projectName);
-                const url = `/api/stats?projectId=${projectName}`;
-                console.log('API URL:', url);
-                
-                const response = await fetch(url);
-                console.log('Response status:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Stats data received:', data);
-                    setStats(data);
-                } else {
-                    const errorText = await response.text();
-                    console.error('Failed to fetch stats:', response.status, errorText);
-                }
-            } catch (error) {
-                console.error('Error fetching stats:', error);
-            } finally {
-                setStatsLoading(false);
-            }
-        };
-
-        fetchStats();
-    }, [projectName]);
-
-    const kanbanData = {
+    const [draggedTask, setDraggedTask] = useState<any>(null);
+    const [kanbanData, setKanbanData] = useState({
         todo: [
             {
                 id: 1,
@@ -210,20 +174,77 @@ export default function DynamicProjectPage() {
                 }
             }
         ]
-    };
+    });
+
+    const tabs = [
+        { id: 'summary', label: 'Summary', icon: 'summary-icon.svg', iconBold: 'summary-icon-bold.svg' },
+        { id: 'board', label: 'Board', icon: 'board-icon.svg', iconBold: 'board-icon-bold.svg' },
+        { id: 'overview', label: 'Overview', icon: 'overview-icon.svg', iconBold: 'overview-icon-bold.svg' },
+        { id: 'code', label: 'Code', icon: 'code-icon.svg', iconBold: 'code-icon-bold.svg' }
+    ];
+
+    // Fetch stats when component mounts
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setStatsLoading(true);
+                console.log('Fetching stats for project:', projectName);
+                const url = `/api/stats?projectId=${projectName}`;
+                console.log('API URL:', url);
+
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Stats data received:', data);
+                    setStats(data);
+                } else {
+                    const errorText = await response.text();
+                    console.error('Failed to fetch stats:', response.status, errorText);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, [projectName]);
+
 
     const getLabelColor = (label: string) => {
-        const colors: { [key: string]: string } = {
-            'DEVELOPMENT': '#AAD9DF',
-            'DESIGN': '#AAD9DF',
-            'FRONTEND': '#AAD9DF',
-            'BACKEND': '#AAD9DF',
-            'SECURITY': '#AAD9DF',
-            'DATABASE': '#AAD9DF',
-            'TESTING': '#AAD9DF',
-            'SETUP': '#AAD9DF'
-        };
-        return colors[label] || '#AAD9DF';
+        return '#F5F5F5';
+    };
+
+    const handleDragStart = (e: React.DragEvent, task: any) => {
+        setDraggedTask(task);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e: React.DragEvent, targetColumn: string) => {
+        e.preventDefault();
+        if (!draggedTask) return;
+
+        // Remove task from current column
+        const newKanbanData = { ...kanbanData };
+        Object.keys(newKanbanData).forEach(column => {
+            (newKanbanData[column as keyof typeof newKanbanData] as any[]) = (newKanbanData[column as keyof typeof newKanbanData] as any[]).filter(
+                (task: any) => task.id !== draggedTask.id
+            );
+        });
+
+        // Add task to target column
+        (newKanbanData[targetColumn as keyof typeof newKanbanData] as any[]).push(draggedTask);
+
+        setKanbanData(newKanbanData);
+        setDraggedTask(null);
     };
 
     const renderTaskModal = () => {
@@ -315,7 +336,7 @@ export default function DynamicProjectPage() {
                             }}>
                                 {/* TO DO Column */}
                                 <div style={{
-                                    backgroundColor: '#f8f9fa',
+                                    backgroundColor: '#FFFFFF',
                                     borderRadius: '8px',
                                     padding: '1rem',
                                     minHeight: '300px'
@@ -384,7 +405,7 @@ export default function DynamicProjectPage() {
 
                                 {/* IN PROGRESS Column */}
                                 <div style={{
-                                    backgroundColor: '#f8f9fa',
+                                    backgroundColor: '#FFFFFF',
                                     borderRadius: '8px',
                                     padding: '1rem',
                                     minHeight: '300px'
@@ -453,7 +474,7 @@ export default function DynamicProjectPage() {
 
                                 {/* TESTING Column */}
                                 <div style={{
-                                    backgroundColor: '#f8f9fa',
+                                    backgroundColor: '#FFFFFF',
                                     borderRadius: '8px',
                                     padding: '1rem',
                                     minHeight: '300px'
@@ -522,7 +543,7 @@ export default function DynamicProjectPage() {
 
                                 {/* DONE Column */}
                                 <div style={{
-                                    backgroundColor: '#f8f9fa',
+                                    backgroundColor: '#FFFFFF',
                                     borderRadius: '8px',
                                     padding: '1rem',
                                     minHeight: '300px'
@@ -738,20 +759,26 @@ export default function DynamicProjectPage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '1.5rem',
-            padding: '1.5rem 0'
+            padding: '1.5rem 2rem',
+            width: '100%'
         }}>
             {/* TO DO Column */}
-            <div style={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '1rem',
-                minHeight: '400px'
-            }}>
+            <div
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'todo')}
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '8px',
+                    padding: '0.75rem',
+                    minHeight: '70vh',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '1rem'
+                    marginBottom: '0.75rem'
                 }}>
                     <h3 style={{ color: '#495B69', margin: '0', fontSize: '1rem', fontWeight: '600' }}>
                         TO DO
@@ -769,20 +796,34 @@ export default function DynamicProjectPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {kanbanData.todo.map((task) => (
-                        <div key={task.id} style={{
-                            backgroundColor: 'white',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            border: '1px solid #e9ecef',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
+                        <div key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            style={{
+                                backgroundColor: '#AAD9DF',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'grab',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                backdropFilter: 'blur(5px)',
+                                transform: 'scale(1)'
+                            }}
                             onClick={() => setSelectedTask(task)}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                            }}
                         >
                             <h4 style={{
                                 color: '#495B69',
-                                margin: '0 0 0.75rem 0',
-                                fontSize: '0.875rem',
+                                margin: '0 0 0.5rem 0',
+                                fontSize: '1rem',
                                 fontWeight: '500'
                             }}>
                                 {task.title}
@@ -807,17 +848,22 @@ export default function DynamicProjectPage() {
             </div>
 
             {/* IN PROGRESS Column */}
-            <div style={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '1rem',
-                minHeight: '400px'
-            }}>
+            <div
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'inProgress')}
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '8px',
+                    padding: '0.75rem',
+                    minHeight: '70vh',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '1rem'
+                    marginBottom: '0.75rem'
                 }}>
                     <h3 style={{ color: '#495B69', margin: '0', fontSize: '1rem', fontWeight: '600' }}>
                         IN PROGRESS
@@ -835,20 +881,34 @@ export default function DynamicProjectPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {kanbanData.inProgress.map((task) => (
-                        <div key={task.id} style={{
-                            backgroundColor: 'white',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            border: '1px solid #e9ecef',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
+                        <div key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            style={{
+                                backgroundColor: '#AAD9DF',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'grab',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                backdropFilter: 'blur(5px)',
+                                transform: 'scale(1)'
+                            }}
                             onClick={() => setSelectedTask(task)}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                            }}
                         >
                             <h4 style={{
                                 color: '#495B69',
-                                margin: '0 0 0.75rem 0',
-                                fontSize: '0.875rem',
+                                margin: '0 0 0.5rem 0',
+                                fontSize: '1rem',
                                 fontWeight: '500'
                             }}>
                                 {task.title}
@@ -873,17 +933,22 @@ export default function DynamicProjectPage() {
             </div>
 
             {/* TESTING Column */}
-            <div style={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '1rem',
-                minHeight: '400px'
-            }}>
+            <div
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'testing')}
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '8px',
+                    padding: '0.75rem',
+                    minHeight: '70vh',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '1rem'
+                    marginBottom: '0.75rem'
                 }}>
                     <h3 style={{ color: '#495B69', margin: '0', fontSize: '1rem', fontWeight: '600' }}>
                         TESTING
@@ -901,20 +966,34 @@ export default function DynamicProjectPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {kanbanData.testing.map((task) => (
-                        <div key={task.id} style={{
-                            backgroundColor: 'white',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            border: '1px solid #e9ecef',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
+                        <div key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            style={{
+                                backgroundColor: '#AAD9DF',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'grab',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                backdropFilter: 'blur(5px)',
+                                transform: 'scale(1)'
+                            }}
                             onClick={() => setSelectedTask(task)}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                            }}
                         >
                             <h4 style={{
                                 color: '#495B69',
-                                margin: '0 0 0.75rem 0',
-                                fontSize: '0.875rem',
+                                margin: '0 0 0.5rem 0',
+                                fontSize: '1rem',
                                 fontWeight: '500'
                             }}>
                                 {task.title}
@@ -939,17 +1018,22 @@ export default function DynamicProjectPage() {
             </div>
 
             {/* DONE Column */}
-            <div style={{
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                padding: '1rem',
-                minHeight: '400px'
-            }}>
+            <div
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, 'done')}
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '8px',
+                    padding: '0.75rem',
+                    minHeight: '74vh',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '1rem'
+                    marginBottom: '0.75rem'
                 }}>
                     <h3 style={{ color: '#495B69', margin: '0', fontSize: '1rem', fontWeight: '600' }}>
                         DONE ✓
@@ -967,21 +1051,36 @@ export default function DynamicProjectPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {kanbanData.done.map((task) => (
-                        <div key={task.id} style={{
-                            backgroundColor: 'white',
-                            padding: '1rem',
-                            borderRadius: '8px',
-                            border: '1px solid #e9ecef',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
+                        <div key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            style={{
+                                backgroundColor: '#AAD9DF',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                cursor: 'grab',
+                                transition: 'all 0.2s ease',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                backdropFilter: 'blur(5px)',
+                                transform: 'scale(1)'
+                            }}
                             onClick={() => setSelectedTask(task)}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                            }}
                         >
                             <h4 style={{
                                 color: '#495B69',
-                                margin: '0 0 0.75rem 0',
-                                fontSize: '0.875rem',
-                                fontWeight: '500'
+                                margin: '0 0 0.5rem 0',
+                                fontSize: '1rem',
+                                fontWeight: '500',
+                                textDecoration: 'line-through'
                             }}>
                                 {task.title}
                             </h4>
@@ -1008,73 +1107,100 @@ export default function DynamicProjectPage() {
 
     return (
         <div style={{
-            padding: '2rem',
+            padding: '2rem 0',
             width: '100%',
-            backgroundColor: 'white',
+            backgroundColor: '#F5F5F5',
             minHeight: '100vh'
         }}>
-            {/* Breadcrumb */}
-            <div style={{ marginBottom: '1rem' }}>
-                <span
-                    style={{
-                        color: '#6c757d',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        transition: 'color 0.2s ease'
-                    }}
-                    onClick={() => window.location.href = '/projects'}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#495B69'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#6c757d'}
-                >
-                    Projects
-                </span>
-            </div>
-
-            {/* Project Title */}
-            <h1 style={{
-                color: '#495B69',
-                margin: '0 0 2rem 0',
-                fontSize: '2rem',
-                fontWeight: '700'
-            }}>
-                {projectName}
-            </h1>
-
-            {/* Tabs */}
-            <div style={{
-                display: 'flex',
-                gap: '2rem',
-                marginBottom: '1.5rem',
-                borderBottom: '1px solid #e9ecef',
-                paddingBottom: '0.5rem'
-            }}>
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+            {/* Header Content */}
+            <div style={{ padding: '0 2rem' }}>
+                {/* Breadcrumb */}
+                <div style={{ marginBottom: '1rem' }}>
+                    <span
                         style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            color: activeTab === tab.id ? '#495B69' : '#6c757d',
-                            fontSize: '1rem',
-                            fontWeight: activeTab === tab.id ? '600' : '400',
+                            color: '#495B69',
+                            fontSize: '1.125rem',
                             cursor: 'pointer',
-                            padding: '0.5rem 0',
                             transition: 'all 0.2s ease'
                         }}
+                        onClick={() => window.location.href = '/projects'}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#3a4a5c';
+                            e.currentTarget.style.textDecoration = 'underline';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#495B69';
+                            e.currentTarget.style.textDecoration = 'none';
+                        }}
                     >
-                        <Image
-                            src={`/${activeTab === tab.id ? tab.iconBold : tab.icon}`}
-                            alt={tab.label}
-                            width={18}
-                            height={18}
-                        />
-                        {tab.label}
-                    </button>
-                ))}
+                        Projects
+                    </span>
+                </div>
+
+                {/* Project Title */}
+                <h1 style={{
+                    color: '#495B69',
+                    margin: '0 0 2rem 0',
+                    fontSize: '2rem',
+                    fontWeight: '700'
+                }}>
+                    {projectName}
+                </h1>
+
+                {/* Tabs */}
+                <div style={{
+                    display: 'flex',
+                    gap: '2rem',
+                    marginBottom: '0.1rem',
+                    borderBottom: '1px solid #495B69',
+                    paddingBottom: '0rem'
+                }}>
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                backgroundColor: activeTab === tab.id ? '#F5F5F5' : 'transparent',
+                                border: 'none',
+                                borderBottom: activeTab === tab.id ? '3px solid #495B69' : 'none',
+                                color: '#495B69',
+                                fontSize: '1.125rem',
+                                fontWeight: activeTab === tab.id ? '600' : '400',
+                                cursor: 'pointer',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: activeTab === tab.id ? '6px 6px 0 0' : '6px',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (activeTab !== tab.id) {
+                                    setHoveredTab(tab.id);
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                    e.currentTarget.style.fontWeight = '600';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (activeTab !== tab.id) {
+                                    setHoveredTab(null);
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.fontWeight = '400';
+                                }
+                            }}
+                        >
+                            <Image
+                                src={`/${activeTab === tab.id || hoveredTab === tab.id ? tab.iconBold : tab.icon}`}
+                                alt={tab.label}
+                                width={22}
+                                height={22}
+                            />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Tab Content */}
