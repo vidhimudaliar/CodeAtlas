@@ -4,6 +4,7 @@ import { StatsGroup } from "@/components/StatsGroup";
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import ProjectFlow from '@/components/ProjectFlow';
 
 export default function DynamicProjectPage() {
     const params = useParams();
@@ -1012,22 +1013,22 @@ export default function DynamicProjectPage() {
             backgroundColor: 'white',
             minHeight: '100vh'
         }}>
-      {/* Breadcrumb */}
-      <div style={{ marginBottom: '1rem' }}>
-        <span 
-          style={{ 
-            color: '#6c757d', 
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            transition: 'color 0.2s ease'
-          }}
-          onClick={() => window.location.href = '/projects'}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#495B69'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#6c757d'}
-        >
-          Projects
-        </span>
-      </div>
+            {/* Breadcrumb */}
+            <div style={{ marginBottom: '1rem' }}>
+                <span
+                    style={{
+                        color: '#6c757d',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        transition: 'color 0.2s ease'
+                    }}
+                    onClick={() => window.location.href = '/projects'}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#495B69'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#6c757d'}
+                >
+                    Projects
+                </span>
+            </div>
 
             {/* Project Title */}
             <h1 style={{
@@ -1086,17 +1087,19 @@ export default function DynamicProjectPage() {
                             Loading stats...
                         </div>
                     ) : (
-                        <StatsGroup 
-                            tasksDone={stats.tasksDone} 
-                            tasksAssigned={stats.tasksAssigned} 
-                            numberCommits={stats.numberCommits} 
+                        <StatsGroup
+                            tasksDone={stats.tasksDone}
+                            tasksAssigned={stats.tasksAssigned}
+                            numberCommits={stats.numberCommits}
                         />
                     )}
                 </div>
             )}
             {activeTab === 'overview' && (
-                <div style={{ padding: '2rem 0', color: '#495B69' }}>
-                    <p>Overview content will go here</p>
+                <div style={{ padding: '1rem 0' }}>
+                    <div style={{ padding: '1rem 0' }}>
+                        <ProjectFlow />
+                    </div>
                 </div>
             )}
             {activeTab === 'code' && (

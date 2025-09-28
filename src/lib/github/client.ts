@@ -3,9 +3,21 @@
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
 import { readFile } from "node:fs/promises";
-import { getEnv, requireEnv } from "@/lib/env";
 
 let privateKeyCache: string | undefined;
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+function getEnv(name: string, defaultValue?: string): string {
+  const value = process.env[name];
+  return value !== undefined ? value : (defaultValue ?? "");
+}
 
 async function loadPrivateKey(): Promise<string> {
   if (privateKeyCache) {
