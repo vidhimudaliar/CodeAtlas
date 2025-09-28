@@ -1,4 +1,5 @@
 "use client";
+import { StatsGroup } from "@/components/StatsGroup";
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -1048,6 +1049,11 @@ export default function DynamicProjectPage() {
             {activeTab === 'summary' && (
                 <div style={{ padding: '2rem 0', color: '#495B69' }}>
                     <p>Summary content will go here</p>
+                    <StatsGroup 
+      tasksDone={12} 
+      tasksAssigned={20} 
+      numberCommits={35} 
+    />
                 </div>
             )}
             {activeTab === 'overview' && (

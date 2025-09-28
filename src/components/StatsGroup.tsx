@@ -1,5 +1,4 @@
 import classes from './StatsGroup.module.css';
-import { Text } from '@mantine/core';
 
 interface StatsGroupProps {
   tasksDone: number;
