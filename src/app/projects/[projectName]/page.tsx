@@ -16,6 +16,7 @@ export default function DynamicProjectPage() {
     const [stats, setStats] = useState({ tasksDone: 0, tasksAssigned: 0, numberCommits: 0 });
     const [statsLoading, setStatsLoading] = useState(true);
     const [draggedTask, setDraggedTask] = useState<any>(null);
+    const [draggedSubtask, setDraggedSubtask] = useState<any>(null);
     const [kanbanData, setKanbanData] = useState({
         todo: [
             {
@@ -247,6 +248,49 @@ export default function DynamicProjectPage() {
         setDraggedTask(null);
     };
 
+    const handleSubtaskDragStart = (e: React.DragEvent, subtask: any) => {
+        setDraggedSubtask(subtask);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleSubtaskDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleSubtaskDrop = (e: React.DragEvent, targetColumn: string) => {
+        e.preventDefault();
+        if (!draggedSubtask || !selectedTask) return;
+
+        // Create a copy of the selected task's subtasks
+        const newSubtasks = { ...selectedTask.subtasks };
+
+        // Remove subtask from current column
+        Object.keys(newSubtasks).forEach(column => {
+            newSubtasks[column as keyof typeof newSubtasks] = newSubtasks[column as keyof typeof newSubtasks].filter(
+                (subtask: any) => subtask.id !== draggedSubtask.id
+            );
+        });
+
+        // Add subtask to target column
+        (newSubtasks[targetColumn as keyof typeof newSubtasks] as any[]).push(draggedSubtask);
+
+        // Update the selected task with new subtasks
+        const updatedTask = { ...selectedTask, subtasks: newSubtasks };
+        setSelectedTask(updatedTask);
+
+        // Update the main kanban data as well
+        const newKanbanData = { ...kanbanData };
+        Object.keys(newKanbanData).forEach(column => {
+            newKanbanData[column as keyof typeof newKanbanData] = newKanbanData[column as keyof typeof newKanbanData].map((task: any) =>
+                task.id === selectedTask.id ? updatedTask : task
+            );
+        });
+        setKanbanData(newKanbanData);
+
+        setDraggedSubtask(null);
+    };
+
     const renderTaskModal = () => {
         if (!selectedTask) return null;
 
@@ -268,8 +312,8 @@ export default function DynamicProjectPage() {
                     backgroundColor: 'white',
                     borderRadius: '12px',
                     width: '100%',
-                    maxWidth: '1200px',
-                    maxHeight: '90vh',
+                    maxWidth: '1400px',
+                    maxHeight: '95vh',
                     overflow: 'auto',
                     position: 'relative'
                 }}>
@@ -278,7 +322,7 @@ export default function DynamicProjectPage() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        padding: '2rem 2rem 1rem 2rem',
+                        padding: '1rem 1.5rem 0.5rem 1.5rem',
                         borderBottom: '1px solid #e9ecef'
                     }}>
                         <h2 style={{
@@ -305,9 +349,9 @@ export default function DynamicProjectPage() {
                     </div>
 
                     {/* Modal Content */}
-                    <div style={{ padding: '2rem' }}>
+                    <div style={{ padding: '1rem 1.5rem' }}>
                         {/* Description */}
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ marginBottom: '1rem' }}>
                             <p style={{
                                 color: '#495B69',
                                 lineHeight: '1.6',
@@ -321,7 +365,7 @@ export default function DynamicProjectPage() {
                         <div>
                             <h3 style={{
                                 color: '#495B69',
-                                margin: '0 0 1.5rem 0',
+                                margin: '0 0 0.75rem 0',
                                 fontSize: '1.25rem',
                                 fontWeight: '600'
                             }}>
@@ -332,25 +376,30 @@ export default function DynamicProjectPage() {
                             <div style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(4, 1fr)',
-                                gap: '1.5rem'
+                                gap: '1rem'
                             }}>
                                 {/* TO DO Column */}
-                                <div style={{
-                                    backgroundColor: '#FFFFFF',
-                                    borderRadius: '8px',
-                                    padding: '1rem',
-                                    minHeight: '300px'
-                                }}>
+                                <div
+                                    onDragOver={handleSubtaskDragOver}
+                                    onDrop={(e) => handleSubtaskDrop(e, 'todo')}
+                                    style={{
+                                        backgroundColor: '#FFFFFF',
+                                        borderRadius: '8px',
+                                        padding: '0.5rem',
+                                        minHeight: '400px',
+                                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                                        backdropFilter: 'blur(10px)'
+                                    }}>
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        marginBottom: '1rem'
+                                        marginBottom: '0.5rem'
                                     }}>
                                         <h4 style={{
                                             color: '#495B69',
                                             margin: 0,
-                                            fontSize: '0.875rem',
+                                            fontSize: '1.1rem',
                                             fontWeight: '600'
                                         }}>
                                             TO DO
@@ -366,60 +415,67 @@ export default function DynamicProjectPage() {
                                             {selectedTask.subtasks.todo.length}
                                         </span>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                         {selectedTask.subtasks.todo.map((subtask: any) => (
-                                            <div key={subtask.id} style={{
-                                                backgroundColor: '#AAD9DF',
-                                                padding: '1rem',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer'
-                                            }}
+                                            <div key={subtask.id}
+                                                draggable
+                                                onDragStart={(e) => handleSubtaskDragStart(e, subtask)}
+                                                style={{
+                                                    backgroundColor: '#AAD9DF',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    cursor: 'grab',
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                                    backdropFilter: 'blur(5px)',
+                                                    transform: 'scale(1)'
+                                                }}
                                                 onClick={() => setSelectedSubtask(subtask)}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)';
+                                                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                                                }}
                                             >
                                                 <h5 style={{
                                                     color: '#495B69',
-                                                    margin: '0 0 0.5rem 0',
-                                                    fontSize: '0.875rem',
+                                                    margin: '0',
+                                                    fontSize: '1.1rem',
                                                     fontWeight: '500'
                                                 }}>
                                                     {subtask.title}
                                                 </h5>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label: string, index: number) => (
-                                                        <span key={index} style={{
-                                                            backgroundColor: '#495B69',
-                                                            color: 'white',
-                                                            padding: '0.125rem 0.5rem',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {label}
-                                                        </span>
-                                                    ))}
-                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* IN PROGRESS Column */}
-                                <div style={{
-                                    backgroundColor: '#FFFFFF',
-                                    borderRadius: '8px',
-                                    padding: '1rem',
-                                    minHeight: '300px'
-                                }}>
+                                <div
+                                    onDragOver={handleSubtaskDragOver}
+                                    onDrop={(e) => handleSubtaskDrop(e, 'inProgress')}
+                                    style={{
+                                        backgroundColor: '#FFFFFF',
+                                        borderRadius: '8px',
+                                        padding: '0.5rem',
+                                        minHeight: '400px',
+                                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                                        backdropFilter: 'blur(10px)'
+                                    }}>
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        marginBottom: '1rem'
+                                        marginBottom: '0.5rem'
                                     }}>
                                         <h4 style={{
                                             color: '#495B69',
                                             margin: 0,
-                                            fontSize: '0.875rem',
+                                            fontSize: '1.1rem',
                                             fontWeight: '600'
                                         }}>
                                             IN PROGRESS
@@ -435,60 +491,67 @@ export default function DynamicProjectPage() {
                                             {selectedTask.subtasks.inProgress.length}
                                         </span>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                         {selectedTask.subtasks.inProgress.map((subtask: any) => (
-                                            <div key={subtask.id} style={{
-                                                backgroundColor: '#AAD9DF',
-                                                padding: '1rem',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer'
-                                            }}
+                                            <div key={subtask.id}
+                                                draggable
+                                                onDragStart={(e) => handleSubtaskDragStart(e, subtask)}
+                                                style={{
+                                                    backgroundColor: '#AAD9DF',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    cursor: 'grab',
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                                    backdropFilter: 'blur(5px)',
+                                                    transform: 'scale(1)'
+                                                }}
                                                 onClick={() => setSelectedSubtask(subtask)}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)';
+                                                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                                                }}
                                             >
                                                 <h5 style={{
                                                     color: '#495B69',
-                                                    margin: '0 0 0.5rem 0',
-                                                    fontSize: '0.875rem',
+                                                    margin: '0',
+                                                    fontSize: '1.1rem',
                                                     fontWeight: '500'
                                                 }}>
                                                     {subtask.title}
                                                 </h5>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label: string, index: number) => (
-                                                        <span key={index} style={{
-                                                            backgroundColor: '#495B69',
-                                                            color: 'white',
-                                                            padding: '0.125rem 0.5rem',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {label}
-                                                        </span>
-                                                    ))}
-                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* TESTING Column */}
-                                <div style={{
-                                    backgroundColor: '#FFFFFF',
-                                    borderRadius: '8px',
-                                    padding: '1rem',
-                                    minHeight: '300px'
-                                }}>
+                                <div
+                                    onDragOver={handleSubtaskDragOver}
+                                    onDrop={(e) => handleSubtaskDrop(e, 'testing')}
+                                    style={{
+                                        backgroundColor: '#FFFFFF',
+                                        borderRadius: '8px',
+                                        padding: '0.5rem',
+                                        minHeight: '400px',
+                                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                                        backdropFilter: 'blur(10px)'
+                                    }}>
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        marginBottom: '1rem'
+                                        marginBottom: '0.5rem'
                                     }}>
                                         <h4 style={{
                                             color: '#495B69',
                                             margin: 0,
-                                            fontSize: '0.875rem',
+                                            fontSize: '1.1rem',
                                             fontWeight: '600'
                                         }}>
                                             TESTING
@@ -504,61 +567,68 @@ export default function DynamicProjectPage() {
                                             {selectedTask.subtasks.testing.length}
                                         </span>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                         {selectedTask.subtasks.testing.map((subtask: any) => (
-                                            <div key={subtask.id} style={{
-                                                backgroundColor: '#AAD9DF',
-                                                padding: '1rem',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer'
-                                            }}
+                                            <div key={subtask.id}
+                                                draggable
+                                                onDragStart={(e) => handleSubtaskDragStart(e, subtask)}
+                                                style={{
+                                                    backgroundColor: '#AAD9DF',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    cursor: 'grab',
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                                    backdropFilter: 'blur(5px)',
+                                                    transform: 'scale(1)'
+                                                }}
                                                 onClick={() => setSelectedSubtask(subtask)}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)';
+                                                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                                                }}
                                             >
                                                 <h5 style={{
                                                     color: '#495B69',
-                                                    margin: '0 0 0.5rem 0',
-                                                    fontSize: '0.875rem',
+                                                    margin: '0',
+                                                    fontSize: '1.1rem',
                                                     fontWeight: '500'
                                                 }}>
                                                     {subtask.title}
                                                 </h5>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label: string, index: number) => (
-                                                        <span key={index} style={{
-                                                            backgroundColor: '#495B69',
-                                                            color: 'white',
-                                                            padding: '0.125rem 0.5rem',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {label}
-                                                        </span>
-                                                    ))}
-                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* DONE Column */}
-                                <div style={{
-                                    backgroundColor: '#FFFFFF',
-                                    borderRadius: '8px',
-                                    padding: '1rem',
-                                    minHeight: '300px'
-                                }}>
+                                <div
+                                    onDragOver={handleSubtaskDragOver}
+                                    onDrop={(e) => handleSubtaskDrop(e, 'done')}
+                                    style={{
+                                        backgroundColor: '#FFFFFF',
+                                        borderRadius: '8px',
+                                        padding: '0.5rem',
+                                        minHeight: '400px',
+                                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                                        backdropFilter: 'blur(10px)'
+                                    }}>
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        marginBottom: '1rem'
+                                        marginBottom: '0.5rem'
                                     }}>
                                         <h4 style={{
                                             color: '#495B69',
                                             margin: 0,
-                                            fontSize: '0.875rem',
-                                            fontWeight: '600'
+                                            fontSize: '1rem',
+                                            fontWeight: '600',
                                         }}>
                                             DONE ✓
                                         </h4>
@@ -573,38 +643,41 @@ export default function DynamicProjectPage() {
                                             {selectedTask.subtasks.done.length}
                                         </span>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                         {selectedTask.subtasks.done.map((subtask: any) => (
-                                            <div key={subtask.id} style={{
-                                                backgroundColor: '#AAD9DF',
-                                                padding: '1rem',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer'
-                                            }}
+                                            <div key={subtask.id}
+                                                draggable
+                                                onDragStart={(e) => handleSubtaskDragStart(e, subtask)}
+                                                style={{
+                                                    backgroundColor: '#AAD9DF',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    cursor: 'grab',
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+                                                    backdropFilter: 'blur(5px)',
+                                                    transform: 'scale(1)'
+                                                }}
                                                 onClick={() => setSelectedSubtask(subtask)}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)';
+                                                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                                                }}
                                             >
                                                 <h5 style={{
                                                     color: '#495B69',
-                                                    margin: '0 0 0.5rem 0',
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: '500'
+                                                    margin: '0',
+                                                    fontSize: '1rem',
+                                                    fontWeight: '500',
+                                                    textDecoration: 'line-through'
                                                 }}>
                                                     {subtask.title}
                                                 </h5>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                    {subtask.labels.map((label: string, index: number) => (
-                                                        <span key={index} style={{
-                                                            backgroundColor: '#495B69',
-                                                            color: 'white',
-                                                            padding: '0.125rem 0.5rem',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: '500'
-                                                        }}>
-                                                            {label}
-                                                        </span>
-                                                    ))}
-                                                </div>
                                             </div>
                                         ))}
                                     </div>
