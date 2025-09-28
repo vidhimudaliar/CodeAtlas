@@ -32,33 +32,3 @@ export async function getInstallationOctokit(installationId: number): Promise<Oc
 
   return new Octokit({ auth: token, baseUrl });
 }
-
-const STATE_STORAGE_KEY = "codeatlas-gh-app-state";
-
-export function connectGitHub(options: { redirect?: boolean } = {}): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const appSlug = process.env.NEXT_PUBLIC_GH_APP_SLUG;
-  if (!appSlug) {
-    console.warn("connectGitHub called without NEXT_PUBLIC_GH_APP_SLUG configured");
-    return null;
-  }
-
-  let state = window.sessionStorage.getItem(STATE_STORAGE_KEY);
-  if (!state) {
-    state = window.crypto.randomUUID();
-    window.sessionStorage.setItem(STATE_STORAGE_KEY, state);
-  }
-
-  const target = new URL(`https://github.com/apps/${appSlug}/installations/new`);
-  target.searchParams.set("state", state);
-  const url = target.toString();
-
-  if (options.redirect !== false) {
-    window.location.href = url;
-  }
-
-  return url;
-}

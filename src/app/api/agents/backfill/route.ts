@@ -1,288 +1,271 @@
-// app/api/agents/backfill/route.ts
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-const ADK_BASE_URL = process.env.ADK_BASE_URL ?? "http://localhost:8000";
-
-function resolveBaseUrl(req: NextRequest): string {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.BASE_URL ||
-    `${req.nextUrl.protocol}//${req.headers.get("host")}` ||
-    "http://127.0.0.1:3000"
-  );
-}
+const ADK_BASE_URL = process.env.ADK_BASE_URL ?? "http://127.0.0.1:8000";
+const APP_NAME = process.env.ADK_APP_NAME ?? "agent";        // your ADK app name
+const AGENT_NAME = process.env.ADK_AGENT_NAME ?? "Planner";     // your agent name in ADK
+const AGENT_USER = process.env.ADK_USER_ID ?? "local";          // user bucket in ADK
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { installation_id, owner, repo, stack, brief } = body;
-  const rawUserId = typeof body.userId === "string" ? body.userId.trim() : "";
-  const agentUserId = rawUserId.length ? rawUserId : "local";
-
-  console.log("[agents/backfill] incoming payload", {
-    installation_id,
-    owner,
-    repo,
-    stack,
-    brief,
-    agentUserId,
-  });
-
-  const baseUrl = resolveBaseUrl(req);
-
-  const snapshotRes = await fetch(`${baseUrl}/api/github/snapshot`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ installation_id, owner, repo, stack, brief }),
-  });
-
-  if (!snapshotRes.ok) {
-    const errText = await snapshotRes.text();
-    console.error("[agents/backfill] snapshot fetch failed", snapshotRes.status, errText);
-    return NextResponse.json(
-      { ok: false, error: "Snapshot fetch failed", detail: errText },
-      { status: 502 },
-    );
-  }
-
-  const snapshotPayload = await snapshotRes.json();
-  const snapshot = snapshotPayload?.snapshot;
-
-  if (!snapshot) {
-    console.error("[agents/backfill] snapshot response missing snapshot key", snapshotPayload);
-    return NextResponse.json(
-      { ok: false, error: "Snapshot response malformed" },
-      { status: 502 },
-    );
-  }
-
-  console.log("[agents/backfill] snapshot summary", {
-    defaultBranch: snapshot?.defaultBranch,
-    fileCount: Array.isArray(snapshot?.files) ? snapshot.files.length : undefined,
-    previewCount: Array.isArray(snapshot?.previews) ? snapshot.previews.length : undefined,
-  });
-
-  const sessionId = randomUUID();
-  const sessionUrl = `${ADK_BASE_URL}/apps/agent/users/${agentUserId}/sessions/${sessionId}`;
-  const sessionResponse = await fetch(sessionUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ agent: "planner_agent" }),
-  });
-
-  let sessionBody: unknown = null;
   try {
-    const text = await sessionResponse.text();
-    if (text) {
-      try {
-        sessionBody = JSON.parse(text);
-      } catch {
-        sessionBody = text;
-      }
-    }
-  } catch (error) {
-    console.warn("[agents/backfill] failed to read session response body", error);
-  }
+    const {
+      installation_id,
+      owner,
+      repo,
+      stack = {},
+      brief = "",
+      ref,
+      commit, // optional: { base, head }
+    } = await req.json();
 
-  console.log("[agents/backfill] session create response", {
-    status: sessionResponse.status,
-    sessionId,
-    body: sessionBody,
-  });
-
-  if (!sessionResponse.ok) {
-    return NextResponse.json(
-      { ok: false, error: "Failed to create planner session", detail: sessionBody },
-      { status: 502 },
-    );
-  }
-
-  const promptText = [
-    `Create architecture + WBS for ${stack.framework} (${stack.language}) using ${stack.db}.`,
-    "",
-    "INPUT JSON:",
-    JSON.stringify({ stack, brief, snapshot, userId: agentUserId }),
-  ].join("\n");
-
-  console.log("[agents/backfill] sending run payload", {
-    sessionId,
-    textPreview: promptText.slice(0, 200),
-    textLength: promptText.length,
-  });
-
-  const runRes = await fetch(`${ADK_BASE_URL}/run`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({
-      appName: "agent",
-      userId: agentUserId,
-      sessionId,
-      newMessage: { role: "user", parts: [{ text: promptText }] },
-    }),
-  });
-
-  if (!runRes.ok) {
-    const errText = await runRes.text();
-    console.error("[agents/backfill] ADK /run failed", runRes.status, errText);
-    return NextResponse.json(
-      { ok: false, error: `ADK run failed: ${runRes.status}`, detail: errText },
-      { status: 502 },
-    );
-  }
-
-  const contentType = runRes.headers.get("content-type") || "";
-  console.log("[agents/backfill] run response headers", {
-    status: runRes.status,
-    contentType,
-  });
-
-  let raw: unknown;
-  const candidateTexts: string[] = [];
-
-  if (contentType.includes("application/json")) {
-    raw = await runRes.json();
-    console.log("[agents/backfill] run response json", raw);
-  } else {
-    const text = await runRes.text();
-    console.warn("[agents/backfill] ADK returned non-JSON, attempting to unwrap:", text.slice(0, 300));
-    candidateTexts.push(text);
-    try {
-      raw = JSON.parse(text);
-    } catch {
-      raw = { messages: [{ parts: [{ text }] }] };
-    }
-  }
-
-  collectTexts(raw);
-
-  const { plan, jsonText } = unwrapPlan(raw, candidateTexts);
-  console.log("[agents/backfill] unwrapped plan", {
-    nodes: Array.isArray((plan as any)?.nodes) ? (plan as any).nodes.length : 0,
-    edges: Array.isArray((plan as any)?.edges) ? (plan as any).edges.length : 0,
-  });
-
-  let storeResult: unknown = null;
-  const hasGraph = Array.isArray((plan as any)?.nodes) && Array.isArray((plan as any)?.edges);
-
-  if (hasGraph) {
-    try {
-      const storeRes = await fetch(`${baseUrl}/api/agents/planner/store`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner, repo, blob: jsonText }),
-      });
-
-      const storeBodyText = await storeRes.text();
-      let storeBody: unknown = null;
-      if (storeBodyText) {
-        try {
-          storeBody = JSON.parse(storeBodyText);
-        } catch {
-          storeBody = storeBodyText;
-        }
-      }
-      storeResult = storeBody;
-
-      if (!storeRes.ok) {
-        console.error("[agents/backfill] planner/store failed", storeRes.status, storeBody);
-      } else {
-        console.log("[agents/backfill] planner/store response", storeBody);
-      }
-    } catch (error) {
-      console.error("[agents/backfill] planner/store request threw", error);
-    }
-  } else {
-    console.warn("[agents/backfill] skipping planner/store persist because plan lacks nodes/edges");
-  }
-
-  return NextResponse.json({ ok: true, plan, store: storeResult });
-
-  function collectTexts(node: unknown) {
-    if (node == null) return;
-    if (typeof node === "string") {
-      candidateTexts.push(node);
-      return;
-    }
-    if (Array.isArray(node)) {
-      for (const item of node) collectTexts(item);
-      return;
-    }
-    if (typeof node === "object") {
-      const maybeText = (node as { text?: unknown }).text;
-      if (typeof maybeText === "string") candidateTexts.push(maybeText);
-      for (const value of Object.values(node)) collectTexts(value);
-    }
-  }
-
-  function unwrapPlan(rawAny: any, texts: string[]) {
-    if (rawAny?.nodes && rawAny?.edges) {
-      return { plan: rawAny, jsonText: JSON.stringify(rawAny) };
+    if (!installation_id || !owner || !repo) {
+      return NextResponse.json(
+        { ok: false, error: "installation_id, owner, repo are required" },
+        { status: 400 }
+      );
     }
 
-    if (Array.isArray(rawAny) && rawAny.length === 1 && rawAny[0]?.nodes && rawAny[0]?.edges) {
-      return { plan: rawAny[0], jsonText: JSON.stringify(rawAny[0]) };
-    }
+    // 1) quick snapshot (reuse your existing endpoint so you can infer default branch, etc.)
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.BASE_URL ||
+      `${req.nextUrl.protocol}//${req.headers.get("host")}`;
 
-    const candidates = [...texts];
-
-    if (Array.isArray(rawAny)) {
-      for (const event of rawAny) {
-        const parts = event?.content?.parts;
-        if (Array.isArray(parts)) {
-          for (const part of parts) {
-            if (typeof part?.text === "string") candidates.push(part.text);
-          }
-        }
-      }
-    }
-
-    if (rawAny?.messages) {
-      for (const message of rawAny.messages) {
-        for (const part of message?.parts ?? []) {
-          if (typeof part?.text === "string") candidates.push(part.text);
-        }
-        if (typeof message?.content === "string") {
-          candidates.push(message.content);
-        }
-      }
-    }
-
-    for (const candidate of candidates) {
-      if (typeof candidate !== "string") continue;
-      const cleaned = stripCodeFence(candidate);
-      if (!cleaned) continue;
-      try {
-        const parsed = JSON.parse(cleaned);
-        if (parsed && (parsed.nodes || parsed.edges || parsed.architecture || parsed.wbs)) {
-          return { plan: parsed, jsonText: cleaned };
-        }
-      } catch {
-        const match = cleaned.match(/\{[\s\S]*\}$/);
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[0]);
-            if (parsed && (parsed.nodes || parsed.edges || parsed.architecture || parsed.wbs)) {
-              return { plan: parsed, jsonText: match[0] };
-            }
-          } catch {
-            // ignore
-          }
-        }
-      }
-    }
-
-    const sample = candidates.find((value) => typeof value === "string" && value.trim());
-    console.error("[agents/backfill] failed to unwrap planner response", {
-      sample: typeof sample === "string" ? sample.slice(0, 500) : sample,
+    const snapRes = await fetch(`${baseUrl}/api/github/snapshot`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ installation_id, owner, repo, stack, brief }),
     });
-    throw new Error("Unexpected planner response shape");
-  }
-
-  function stripCodeFence(value: string): string {
-    let text = value.trim();
-    if (text.startsWith("```")) {
-      text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+    if (!snapRes.ok) {
+      return NextResponse.json(
+        { ok: false, stage: "snapshot", error: await snapRes.text() },
+        { status: 502 }
+      );
     }
-    return text;
+    const snapJson = await snapRes.json();
+    const snapshot = snapJson?.snapshot;
+    // If the snapshot endpoint did not return a snapshot object, abort early.
+    // The agent expects a snapshot in the input; calling ADK without it causes
+    // errors like: "Missing key 'snapshot'". Return the snapshot endpoint
+    // response to help diagnose the failure.
+    if (!snapshot) {
+      return NextResponse.json(
+        { ok: false, stage: "snapshot", error: "snapshot_missing", body: snapJson },
+        { status: 502 }
+      );
+    }
+
+    await fetch("/api/agents/planner/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        owner: "acme", repo: "web",
+        ref: "main",
+        // optional:
+        commit: { base: "abc123", head: "def456" },
+        limits: { sampleFilesPerBucket: 10, maxBytesPerFile: 80_000 },
+        preferences: { maxDepth: 4 },
+        context: { stack: { framework: "nextjs", language: "ts", db: "postgres" }, brief: "dashboard + auth" }
+      })
+    });
+    const branch = ref ?? snapshot?.defaultBranch ?? "main";
+
+    // 2) create session (camelCase URL shape for ADK)
+    // const sessionId = randomUUID();
+    // const sessUrl = `${ADK_BASE_URL}/apps/${APP_NAME}/users/${AGENT_USER}/sessions/${sessionId}`;
+    // const sess = await fetch(sessUrl, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   // Some ADK builds want the agent name here; harmless if ignored.
+    //   body: JSON.stringify({ agent: AGENT_NAME }),
+    // });
+    // if (!sess.ok) {
+    //   return NextResponse.json(
+    //     { ok: false, stage: "session", error: await safeText(sess) },
+    //     { status: 502 }
+    //   );
+    // }
+
+    // 3) build the single JSON message the agent expects (NO prose, NO code fences)
+    // const message = JSON.stringify({
+    //   owner,
+    //   repo,
+    //   ref: branch,
+    //   commit: {
+    //     base: commit?.base ?? null,
+    //     head: commit?.head ?? null,
+    //   },
+    //   // The agent will call tools to fetch real files/diff.
+    //   limits: { maxFileBytes: 100_000, maxFilesPerBucket: 50 },
+    //   preferences: { roots: ["frontend", "backend", "dev"], maxDepth: 4, branch },
+    //   // Optional extra context (the agent may ignore this; keep it small)
+    //   context: { stack, brief },
+    // });
+
+    // 4) run the agent (ADK /run schema: camelCase + parts[].text string)
+    // const run = await fetch(`${ADK_BASE_URL}/run`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json", Accept: "application/json" },
+    //   body: JSON.stringify({
+    //     appName: APP_NAME,
+    //     userId: AGENT_USER,
+    //     sessionId,
+    //     newMessage: { role: "user", parts: [{ text: message }] },
+    //   }),
+    // });
+    // if (!run.ok) {
+    //   return NextResponse.json(
+    //     { ok: false, stage: "run", error: await safeText(run) },
+    //     { status: 502 }
+    //   );
+    // }
+
+    // 5) unwrap response: handle both JSON and text, with or without code fences
+    // const contentType = run.headers.get("content-type") || "";
+    // let raw: unknown;
+    // if (contentType.includes("application/json")) raw = await run.json();
+    // else raw = await run.text();
+
+    // const { plan, jsonText, sample } = extractPlan(raw);
+    // if (!plan || !Array.isArray((plan as any).nodes) || !Array.isArray((plan as any).edges)) {
+    //   return NextResponse.json(
+    //     { ok: false, stage: "unwrap", error: "plan_missing_or_invalid", sample },
+    //     { status: 502 }
+    //   );
+    // }
+
+    // 6) OPTIONAL: persist immediately to your store endpoint
+    // Uncomment if you want auto-save:
+    // const persist = await fetch(`${baseUrl}/api/agents/planner/store`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ owner, repo, blob: jsonText ?? JSON.stringify(plan) }),
+    // });
+    // const persistBody = await safeText(persist);
+
+    return NextResponse.json({
+      ok: true,
+      // plan,
+      // jsonText: jsonText ?? JSON.stringify(plan),
+      // persist: { status: persist.status, body: persistBody },
+    });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message ?? String(e) }, { status: 500 });
   }
 }
+
+/* ---------------- helpers ---------------- */
+
+// async function safeText(res: Response) {
+//   try {
+//     const t = await res.text();
+//     try {
+//       const j = JSON.parse(t);
+//       return j;
+//     } catch {
+//       return t;
+//     }
+//   } catch {
+//     return null;
+//   }
+// }
+
+// function extractPlan(raw: unknown): { plan: any; jsonText: string | null; sample?: string } {
+//   // Case 1: already a JSON object containing plan
+//   if (raw && typeof raw === "object") {
+//     const direct = tryExtractFromObject(raw as any);
+//     if (direct) return direct;
+//   }
+
+//   // Case 2: array of events (common ADK streaming)
+//   if (Array.isArray(raw)) {
+//     for (const ev of raw) {
+//       const fromEv = tryExtractFromObject(ev);
+//       if (fromEv) return fromEv;
+//     }
+//   }
+
+//   // Case 3: plain text → try parse JSON (strip ```json fences if present)
+//   if (typeof raw === "string") {
+//     const cleaned = stripFence(raw);
+//     const parsed = tryParsePlan(cleaned);
+//     if (parsed) return parsed;
+//     return { plan: null, jsonText: null, sample: cleaned.slice(0, 500) };
+//   }
+
+//   return { plan: null, jsonText: null, sample: JSON.stringify(raw).slice(0, 500) };
+// }
+
+// function tryExtractFromObject(obj: any): { plan: any; jsonText: string | null } | null {
+//   // Direct
+//   if (obj?.plan?.nodes && obj?.plan?.edges) {
+//     return { plan: obj.plan, jsonText: JSON.stringify(obj.plan) };
+//   }
+//   if (obj?.nodes && obj?.edges) {
+//     return { plan: obj, jsonText: JSON.stringify(obj) };
+//   }
+//   // ADK messages
+//   const msgs = obj?.messages;
+//   if (Array.isArray(msgs)) {
+//     for (const m of msgs) {
+//       const parts = m?.parts;
+//       if (Array.isArray(parts)) {
+//         for (const p of parts) {
+//           if (typeof p?.text === "string") {
+//             const cleaned = stripFence(p.text);
+//             const parsed = tryParsePlan(cleaned);
+//             if (parsed) return parsed;
+//           }
+//         }
+//       }
+//       if (typeof m?.content === "string") {
+//         const cleaned = stripFence(m.content);
+//         const parsed = tryParsePlan(cleaned);
+//         if (parsed) return parsed;
+//       }
+//     }
+//   }
+//   // Event content (content.parts[].text)
+//   const parts = obj?.content?.parts;
+//   if (Array.isArray(parts)) {
+//     for (const p of parts) {
+//       if (typeof p?.text === "string") {
+//         const cleaned = stripFence(p.text);
+//         const parsed = tryParsePlan(cleaned);
+//         if (parsed) return parsed;
+//       }
+//     }
+//   }
+//   return null;
+// }
+
+// function tryParsePlan(text: string | null): { plan: any; jsonText: string } | null {
+//   if (!text) return null;
+//   try {
+//     const j = JSON.parse(text);
+//     if (j?.plan?.nodes && j?.plan?.edges) return { plan: j.plan, jsonText: text };
+//     if (j?.nodes && j?.edges) return { plan: j, jsonText: text };
+//   } catch { }
+//   // heuristic: last JSON object in string
+//   const match = text.match(/\{[\s\S]*\}$/);
+//   if (match) {
+//     try {
+//       const j = JSON.parse(match[0]);
+//       if (j?.plan?.nodes && j?.plan?.edges) return { plan: j.plan, jsonText: match[0] };
+//       if (j?.nodes && j?.edges) return { plan: j, jsonText: match[0] };
+//     } catch { }
+//   }
+//   return null;
+// }
+
+// function stripFence(s: string): string {
+//   const t = s.trim();
+//   if (t.startsWith("```")) {
+//     return t
+//       .replace(/^```json\s*/i, "")
+//       .replace(/^```\s*/i, "")
+//       .replace(/```$/i, "")
+//       .trim();
+//   }
+//   return t;
+// }

@@ -36,31 +36,74 @@ async function getPreview(octokit: any, owner: string, repo: string, path: strin
 }
 
 export async function POST(req: NextRequest) {
-    const { installation_id, owner, repo, stack, brief } = await req.json();
-    const octokit = await getInstallationOctokit(Number(installation_id));
+    const start = Date.now();
+    let body: any;
+    try {
+        body = await req.json();
+    } catch (err) {
+        console.error("[snapshot] failed to parse JSON body", err);
+        return NextResponse.json({ error: "invalid_json", detail: String(err) }, { status: 400 });
+    }
 
-    const defaultBranch = await getDefaultBranch(octokit, owner, repo);
-    const files = await getTreePaths(octokit, owner, repo, defaultBranch);
+    console.log("[snapshot] incoming request", body);
+    const { installation_id, owner, repo, stack, brief, ref } = body;
 
-    // Pull a few key files for the planner’s context (keep it light)
-    const previewPaths = [
-        "README.md", "package.json", "next.config.js", "next.config.ts",
-    ];
-    // Common Next.js signals (optional, capped)
-    const likely = files.filter((p: any) =>
-        p.startsWith("app/") ||
-        p.startsWith("pages/") ||
-        p.startsWith("app/api/") ||
-        p.startsWith("sql/") || p.includes("/migrations/")
-    ).slice(0, 40); // cap for speed
-    const targets = [...new Set([...previewPaths, ...likely])];
+    // Validate required fields early so caller sees clear errors
+    const missing = { installation_id: !installation_id, owner: !owner, repo: !repo };
+    if (missing.installation_id || missing.owner || missing.repo) {
+        console.error("[snapshot] missing required fields", { installation_id, owner, repo });
+        return NextResponse.json({ error: "missing_required_fields", missing, body }, { status: 400 });
+    }
 
-    const previews = (await Promise.all(
-        targets.map(p => getPreview(octokit, owner, repo, p))
-    )).filter(Boolean);
+    let octokit: any;
+    try {
+        octokit = await getInstallationOctokit(Number(installation_id));
+        console.log("[snapshot] octokit created for installation", installation_id);
+    } catch (err) {
+        console.error("[snapshot] getInstallationOctokit failed", err);
+        return NextResponse.json({ error: "octokit_init_failed", detail: String(err) }, { status: 502 });
+    }
 
-    return NextResponse.json({
-        snapshot: { defaultBranch, files, previews },
-        stack, brief, owner, repo, installation_id
-    });
+    try {
+        const defaultBranch = await getDefaultBranch(octokit, owner, repo);
+        console.log("[snapshot] resolved ref", { defaultBranch, requestedRef: ref });
+
+        const files = await getTreePaths(octokit, owner, repo, defaultBranch);
+        console.log("[snapshot] tree entries count", files.length);
+
+        // Pull a few key files for the planner’s context (keep it light)
+        const previewPaths = ["README.md", "package.json", "next.config.js", "next.config.ts"];
+        const likely = files.filter((p: any) =>
+            p.startsWith("app/") ||
+            p.startsWith("pages/") ||
+            p.startsWith("app/api/") ||
+            p.startsWith("sql/") || p.includes("/migrations/")
+        ).slice(0, 40); // cap for speed
+
+        const targets = [...new Set([...previewPaths, ...likely])];
+        console.log("[snapshot] preview targets count", targets.length, { previewPathsCount: previewPaths.length, likelyCount: likely.length });
+
+        const previews = (await Promise.all(
+            targets.map(async p => {
+                try {
+                    const res = await getPreview(octokit, owner, repo, p);
+                    if (res) return res;
+                    return null;
+                } catch (err) {
+                    console.error(`[snapshot] preview fetch failed for ${p}`, err);
+                    return null;
+                }
+            })
+        )).filter(Boolean);
+
+        console.log("[snapshot] previews fetched", previews.length);
+
+        const elapsed = Date.now() - start;
+        console.log("[snapshot] completed", { owner, repo, installation_id, elapsed });
+
+        return NextResponse.json({ snapshot: { defaultBranch, files, previews }, stack, brief, owner, repo, installation_id });
+    } catch (err) {
+        console.error("[snapshot] unexpected error", err);
+        return NextResponse.json({ error: "snapshot_failed", detail: String(err) }, { status: 502 });
+    }
 }

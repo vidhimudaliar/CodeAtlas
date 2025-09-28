@@ -16,6 +16,7 @@ interface ProjectIdeaRepository {
   title: string;
   default_branch: string | null;
   private: boolean | null;
+  installation_id: number | null;
 }
 
 interface ProjectIdeaFormProps {
@@ -29,6 +30,9 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
   const [framework, setFramework] = useState("");
   const [techStack, setTechStack] = useState<string[]>([]);
   const [repository, setRepository] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
   const repositoryOptions = useMemo(
     () =>
@@ -56,10 +60,60 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
     );
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (idea.trim() === "") return;
-    setIdea("");
+    if (submitting) return;
+
+    const selectedRepo = repositories.find(
+      (repo) => `${repo.owner}/${repo.repo}` === repository
+    );
+
+    if (!selectedRepo) {
+      setSubmitError("Select a repository before continuing.");
+      return;
+    }
+
+    if (!selectedRepo.installation_id) {
+      setSubmitError("Missing installation details for this repository.");
+      return;
+    }
+
+    const payload = {
+      installation_id: selectedRepo.installation_id,
+      owner: selectedRepo.owner.toLowerCase(),
+      repo: selectedRepo.repo.toLowerCase(),
+      stack: {
+        framework: framework || "unspecified",
+        techStack,
+      },
+      brief: idea || `Generate a plan for ${selectedRepo.owner}/${selectedRepo.repo}`,
+    };
+
+    try {
+      setSubmitting(true);
+      setSubmitError(null);
+      setSubmitMessage(null);
+
+      const response = await fetch("/api/agents/planner/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const info = await response.json().catch(() => ({}));
+        throw new Error(info.error ?? `Request failed with status ${response.status}`);
+      }
+
+      setSubmitMessage("Analysis triggered. Check the dashboard shortly for results.");
+      setIdea("");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to submit project idea");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -308,9 +362,15 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
               e.currentTarget.style.backgroundColor = "#495B69";
             }}
           >
-            Next
+            Submit
           </button>
         </div>
+        {submitError ? (
+          <p style={{ color: '#dc3545', fontSize: '0.85rem', textAlign: 'right' }}>{submitError}</p>
+        ) : null}
+        {submitMessage ? (
+          <p style={{ color: '#2F6B3B', fontSize: '0.85rem', textAlign: 'right' }}>{submitMessage}</p>
+        ) : null}
       </form>
     </div>
   );
