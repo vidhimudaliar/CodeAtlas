@@ -3,8 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { DatabaseRepository } from "@/lib/user.actions";
+import ProjectIdeaForm from "@/components/ProjectIdeaForm";
+import { connectGitHub } from "@/components/connect-github-button";
 
 interface ProjectsUser {
   id: string;
@@ -50,6 +52,7 @@ function formatRepositoryDate(dateInput: string | null): string {
 
 export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
   const router = useRouter();
+  const [showProjectForm, setShowProjectForm] = useState(false);
 
   const projects: ProjectListItem[] = useMemo(() => {
     return user_repository.map((repo) => {
@@ -67,6 +70,22 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
       };
     }).sort((a, b) => b.sortTimestamp - a.sortTimestamp);
   }, [user_repository]);
+
+  const handleConnectGithub = () => {
+    if (!user.isConnectedToGithub) {
+      connectGitHub();
+    }
+  };
+
+  const handleCreateProjectClick = () => {
+    if (!user.isConnectedToGithub) {
+      handleConnectGithub();
+      return;
+    }
+    setShowProjectForm(true);
+  };
+
+  const connectButtonLabel = user.isConnectedToGithub ? "GitHub Connected" : "Connect GitHub";
 
   return (
     <div style={{
@@ -90,23 +109,63 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
         }}>
           Your Projects
         </h1>
-        <Link href="/">
-          <button style={{
-            backgroundColor: '#495B69',
-            color: '#FFFFFF',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: '500',
-            fontSize: '1rem',
-            transition: 'all 0.2s ease'
-          }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3a4a5c'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#495B69'}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={handleConnectGithub}
+            disabled={user.isConnectedToGithub}
+            style={{
+              backgroundColor: user.isConnectedToGithub ? "#F5F5F5" : "#FFFFFF",
+              color: user.isConnectedToGithub ? "#6c757d" : "#495B69",
+              border: "1px solid #495B69",
+              padding: "0.5rem 1rem",
+              borderRadius: "6px",
+              fontSize: "1rem",
+              fontWeight: "500",
+              cursor: user.isConnectedToGithub ? "default" : "pointer",
+              transition: "all 0.2s ease",
+              opacity: user.isConnectedToGithub ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (user.isConnectedToGithub) return;
+              e.currentTarget.style.backgroundColor = "#495B69";
+              e.currentTarget.style.color = "#FFFFFF";
+            }}
+            onMouseLeave={(e) => {
+              if (user.isConnectedToGithub) return;
+              e.currentTarget.style.backgroundColor = "#FFFFFF";
+              e.currentTarget.style.color = "#495B69";
+            }}
+          >
+            {connectButtonLabel}
+          </button>
+          <button
+            onClick={handleCreateProjectClick}
+            disabled={!user.isConnectedToGithub}
+            style={{
+              backgroundColor: user.isConnectedToGithub ? "#495B69" : "#E0E0E0",
+              color: "#FFFFFF",
+              border: "none",
+              padding: "0.75rem 1.5rem",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              fontWeight: "500",
+              cursor: user.isConnectedToGithub ? "pointer" : "not-allowed",
+              transition: "all 0.2s ease",
+              opacity: user.isConnectedToGithub ? 1 : 0.7,
+            }}
+            onMouseEnter={(e) => {
+              if (!user.isConnectedToGithub) return;
+              e.currentTarget.style.backgroundColor = "#3a4a5c";
+            }}
+            onMouseLeave={(e) => {
+              if (!user.isConnectedToGithub) return;
+              e.currentTarget.style.backgroundColor = "#495B69";
+            }}
+          >
             Create a Project
           </button>
-        </Link>
+        </div>
       </div>
 
       {/* Projects List Container */}
@@ -225,6 +284,83 @@ export function ProjectsClient({ user, user_repository }: ProjectsClientProps) {
           })
         )}
       </div>
+
+      {/* Project Form Modal */}
+      {showProjectForm && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#AAD9DF",
+              borderRadius: "16px",
+              padding: "1.5rem",
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "80vh",
+              overflow: "auto",
+              position: "relative",
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                backgroundColor: "transparent",
+                padding: "0 0 1rem 0",
+                position: "relative",
+              }}
+            >
+              <h2
+                style={{
+                  color: "#495B69",
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  margin: 0,
+                  textAlign: "center",
+                }}
+              >
+                Enter your Project Idea
+              </h2>
+              <button
+                onClick={() => setShowProjectForm(false)}
+                style={{
+                  position: "absolute",
+                  top: "0",
+                  right: "0",
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "#495B69",
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Body */}
+            <div
+              style={{
+                backgroundColor: "transparent",
+                padding: "0",
+              }}
+            >
+              <ProjectIdeaForm user={user} repositories={user_repository} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

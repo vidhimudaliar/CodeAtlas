@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ProjectIdeaForm from "@/components/ProjectIdeaForm";
 import { connectGitHub } from "@/components/connect-github-button";
 
@@ -53,6 +54,7 @@ function formatRepositoryDate(dateInput: string | null): string {
 
 export function DashboardClient({ user, user_repository }: DashboardClientProps) {
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const router = useRouter();
 
   const projects = useMemo<ProjectListItem[]>(() => {
     return user_repository.map((repo) => {
@@ -84,6 +86,11 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
     }
     setShowProjectForm(true);
   };
+
+  const handleProjectClick = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
+  };
+
   const connectButtonLabel = user.isConnectedToGithub ? "GitHub Connected" : "Connect GitHub";
 
   return (
@@ -247,6 +254,7 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                   .map((project, index) => (
                     <div
                       key={project.id || index}
+                      onClick={() => handleProjectClick(project.id)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -256,6 +264,16 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                         minHeight: "50px",
                         borderRadius: "4px",
                         marginBottom: "2px",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#F0F8FF";
+                        e.currentTarget.style.transform = "translateX(4px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? "#FFFFFF" : "#F5F5F5";
+                        e.currentTarget.style.transform = "translateX(0)";
                       }}
                     >
                       {/* Folder Icon */}
@@ -451,7 +469,7 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
             style={{
               backgroundColor: "#AAD9DF",
               borderRadius: "16px",
-              padding: "0",
+              padding: "1.5rem",
               maxWidth: "500px",
               width: "90%",
               maxHeight: "80vh",
@@ -462,10 +480,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
             {/* Header */}
             <div
               style={{
-                backgroundColor: "#AAD9DF",
-                padding: "1.5rem 2rem 1rem 2rem",
-                borderTopLeftRadius: "16px",
-                borderTopRightRadius: "16px",
+                backgroundColor: "transparent",
+                padding: "0 0 1rem 0",
                 position: "relative",
               }}
             >
@@ -484,8 +500,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                 onClick={() => setShowProjectForm(false)}
                 style={{
                   position: "absolute",
-                  top: "1rem",
-                  right: "1rem",
+                  top: "0",
+                  right: "0",
                   background: "none",
                   border: "none",
                   fontSize: "1.5rem",
@@ -500,10 +516,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
             {/* Body */}
             <div
               style={{
-                backgroundColor: "#FFFFFF",
-                padding: "2rem",
-                borderBottomLeftRadius: "16px",
-                borderBottomRightRadius: "16px",
+                backgroundColor: "transparent",
+                padding: "0",
               }}
             >
               <ProjectIdeaForm user={user} repositories={user_repository} />

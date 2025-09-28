@@ -122,7 +122,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
         width: "100%",
       }}
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {/* Project Idea Textarea */}
         <div>
           <textarea
@@ -153,7 +153,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
               color: '#495B69',
               fontSize: '1.1rem',
               fontWeight: '500',
-              marginBottom: '1rem',
+              marginBottom: '0.75rem',
             }}
           >
             Select Specifications
@@ -164,7 +164,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
             style={{
               display: 'flex',
               gap: '0.5rem',
-              marginBottom: '1.5rem',
+              marginBottom: '1rem',
               backgroundColor: '#F5F5F5',
               padding: '0.25rem',
               borderRadius: '8px',
@@ -210,14 +210,14 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
 
           {/* Framework Selection */}
           {selectionType === 'framework' && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
               <label
                 style={{
                   display: 'block',
                   color: '#495B69',
                   fontSize: '0.9rem',
                   fontWeight: '500',
-                  marginBottom: '0.5rem',
+                  marginBottom: '0.4rem',
                 }}
               >
                 Choose Framework *
@@ -247,7 +247,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
 
           {/* Tech Stack Multi-Selection */}
           {selectionType === 'techstack' && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
               <label
                 style={{
                   display: 'block',
@@ -310,7 +310,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
                 color: '#495B69',
                 fontSize: '0.9rem',
                 fontWeight: '500',
-                marginBottom: '0.5rem',
+                marginBottom: '0.4rem',
               }}
             >
               Select a Repository
@@ -341,7 +341,7 @@ export default function ProjectIdeaForm({ repositories }: ProjectIdeaFormProps) 
         </div>
 
         {/* Submit Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
           <button
             type="submit"
             style={{
