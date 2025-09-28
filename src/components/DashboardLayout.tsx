@@ -20,12 +20,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main content area with left margin for fixed sidebar */}
       <div style={{
         flex: 1,
-        padding: "1.5rem",
-        width: "calc(100% - 80px)",
+        padding: "0.75rem 1.5rem 1.5rem 1.5rem",
+        width: "calc(100% - 90px)",
         backgroundColor: "#F5F5F5",
-        marginLeft: "80px", // Account for fixed sidebar width
-        overflow: "auto",
-        boxSizing: "border-box"
+        marginLeft: "90px", // Account for fixed sidebar width
+        overflow: "hidden",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column"
       }}>
         {children}
       </div>

@@ -18,9 +18,9 @@ export default function HomePageLayout() {
       <div style={{
         flex: 1,
         padding: "1.5rem",
-        width: "calc(100% - 80px)",
+        width: "calc(100% - 90px)",
         backgroundColor: "#F5F5F5",
-        marginLeft: "80px", // Account for fixed sidebar width
+        marginLeft: "90px", // Account for fixed sidebar width
         overflow: "auto",
         boxSizing: "border-box"
       }}>

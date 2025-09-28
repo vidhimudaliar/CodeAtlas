@@ -87,13 +87,22 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
   const connectButtonLabel = user.isConnectedToGithub ? "GitHub Connected" : "Connect GitHub";
 
   return (
-    <>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        width: "100%",
+        overflow: "hidden",
+      }}
+    >
       <h1
         style={{
           color: "#495B69",
-          marginBottom: "1.5rem",
-          fontSize: "1.75rem",
+          marginBottom: "1rem",
+          fontSize: "2.25rem",
           fontWeight: "600",
+          flexShrink: 0,
         }}
       >
         Dashboard
@@ -106,22 +115,24 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
           flexDirection: "column",
           gap: "1rem",
           width: "100%",
-          maxWidth: "100%",
-          height: "calc(100vh - 120px)",
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
         }}
       >
         {/* Your Projects Card */}
         <div
           style={{
             backgroundColor: "#FFFFFF",
-            padding: "0.75rem",
+            padding: "1.25rem",
             borderRadius: "16px",
             border: "1px solid #e9ecef",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            flex: "1",
+            flex: 1,
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
+            height: "100%",
           }}
         >
           <div
@@ -135,8 +146,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
             <h2
               style={{
                 color: "#495B69",
-                margin: 10,
-                fontSize: "1.5rem",
+                margin: "0 0 0.75rem 0",
+                fontSize: "1.75rem",
                 fontWeight: "600",
               }}
             >
@@ -232,17 +243,17 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
               >
                 {projects
                   .sort((a, b) => b.sortTimestamp - a.sortTimestamp)
-                  .slice(0, 4)
+                  .slice(0, 5)
                   .map((project, index) => (
                     <div
                       key={project.id || index}
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        padding: "0.8rem 0.5rem",
+                        padding: "1rem 0.75rem",
                         backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F5F5F5",
-                        gap: "0.5rem",
-                        minHeight: "40px",
+                        gap: "0.75rem",
+                        minHeight: "50px",
                         borderRadius: "4px",
                         marginBottom: "2px",
                       }}
@@ -250,22 +261,22 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                       {/* Folder Icon */}
                       <div
                         style={{
-                          width: "32px",
-                          height: "28px",
+                          width: "36px",
+                          height: "32px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
                         }}
                       >
-                        <Image src="/folder-icon.svg" alt="Folder" width={32} height={28} />
+                        <Image src="/folder-icon.svg" alt="Folder" width={36} height={32} />
                       </div>
 
                       {/* Project Name */}
                       <div
                         style={{
                           color: "#495B69",
-                          fontSize: "1.1rem",
+                          fontSize: "1.3rem",
                           fontWeight: "500",
                           minWidth: 0,
                           overflow: "hidden",
@@ -281,9 +292,9 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                         style={{
                           backgroundColor: "#AAD9DF",
                           color: "#FFFFFF",
-                          padding: "0.2rem 0.8rem",
-                          borderRadius: "6px",
-                          fontSize: "0.75rem",
+                          padding: "0.3rem 0.9rem",
+                          borderRadius: "8px",
+                          fontSize: "0.85rem",
                           fontWeight: "500",
                           flexShrink: 0,
                           marginLeft: "1.25rem",
@@ -299,8 +310,8 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                       <div
                         style={{
                           color: "#6c757d",
-                          fontSize: "0.9rem",
-                          minWidth: "140px",
+                          fontSize: "1rem",
+                          minWidth: "160px",
                           textAlign: "right",
                           flexShrink: 0,
                         }}
@@ -358,21 +369,22 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
         <div
           style={{
             backgroundColor: "#FFFFFF",
-            padding: "1rem",
-            borderRadius: "12px",
+            padding: "1.25rem",
+            borderRadius: "16px",
             border: "1px solid #e9ecef",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            flex: "1",
+            flex: 1,
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
+            height: "100%",
           }}
         >
           <h2
             style={{
               color: "#495B69",
-              marginBottom: "1rem",
-              fontSize: "1.25rem",
+              margin: "0 0 0.75rem 0",
+              fontSize: "1.75rem",
               fontWeight: "600",
             }}
           >
@@ -389,12 +401,12 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
               justifyContent: "center",
             }}
           >
-            <Image src="/contribution-large-icon.svg" alt="Contributions" width={60} height={60} />
+            <Image src="/contribution-large-icon.svg" alt="Contributions" width={100} height={100} />
             <p
               style={{
                 color: "#495B69",
                 margin: "0",
-                fontSize: "0.9rem",
+                fontSize: "1.1rem",
                 textAlign: "center",
               }}
             >
@@ -405,9 +417,9 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
                 backgroundColor: "#495B69",
                 color: "#FFFFFF",
                 border: "none",
-                padding: "0.6rem 1.2rem",
+                padding: "0.8rem 1.5rem",
                 borderRadius: "8px",
-                fontSize: "0.9rem",
+                fontSize: "1rem",
                 fontWeight: "500",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
@@ -499,6 +511,6 @@ export function DashboardClient({ user, user_repository }: DashboardClientProps)
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

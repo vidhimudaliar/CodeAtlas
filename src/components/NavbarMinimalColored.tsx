@@ -40,14 +40,35 @@ function NavbarLink({ icon: Icon, label, active, onClick, href, isLogo = false, 
   };
 
   return (
-    <Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+    <Tooltip
+      label={label}
+      position="right"
+      transitionProps={{ duration: 0 }}
+      withArrow
+      offset={8}
+      styles={{
+        tooltip: {
+          fontSize: '16px',
+          fontWeight: '600',
+          padding: '10px 16px',
+          backgroundColor: '#495B69',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 10000,
+        },
+        arrow: {
+          borderColor: '#495B69',
+        }
+      }}
+    >
       <UnstyledButton onClick={handleClick} className={classes.link} data-active={active || undefined}>
         {isLogo ? (
-          <Image src="/bluelogo.png" alt="logo" width={24} height={24} />
+          <Image src="/bluelogo.png" alt="logo" width={32} height={32} />
         ) : svgIcon ? (
-          <Image src={svgIcon} alt={label} width={24} height={24} />
+          <Image src={svgIcon} alt={label} width={32} height={32} />
         ) : (
-          Icon && <Icon size={20} stroke={1.5} />
+          Icon && <Icon size={28} stroke={1.5} />
         )}
       </UnstyledButton>
     </Tooltip>
@@ -89,18 +110,18 @@ export function NavbarMinimalColored() {
       {/* Logo at the top */}
       <div className={classes.logoSection}>
         <div className={classes.logoButton}>
-          <Image src="/bluelogo.png" alt="CodeAtlas Logo" width={40} height={40} />
+          <Image src="/bluelogo.png" alt="CodeAtlas Logo" width={48} height={48} />
         </div>
       </div>
 
       <div className={classes.navbarMain}>
-        <Stack justify="center" gap={20}>
+        <Stack justify="center" gap={32}>
           {mainLinks}
         </Stack>
       </div>
 
       <div className={classes.navbarBottom}>
-        <Stack justify="center" gap={20}>
+        <Stack justify="center" gap={32}>
           {/* <NavbarLink icon={IconSwitchHorizontal} label="Change account" /> */}
           <NavbarLink icon={IconLogout} label="Logout" />
         </Stack>
