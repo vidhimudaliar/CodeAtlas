@@ -19,6 +19,7 @@ export default function DynamicProjectPage() {
     const [draggedSubtask, setDraggedSubtask] = useState<any>(null);
     const [showAddTaskModal, setShowAddTaskModal] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [newTaskSection, setNewTaskSection] = useState('');
     const [selectedColumn, setSelectedColumn] = useState<'todo' | 'inProgress' | 'testing' | 'done'>('todo');
     const [kanbanData, setKanbanData] = useState({
         todo: [
@@ -303,7 +304,7 @@ export default function DynamicProjectPage() {
         const newTask = {
             id: newId,
             title: title,
-            labels: [],
+            labels: newTaskSection.trim() ? [newTaskSection] : [],
             description: '',
             subtasks: { todo: [], inProgress: [], testing: [], done: [] },
         };
@@ -314,6 +315,7 @@ export default function DynamicProjectPage() {
         }));
 
         setNewTaskTitle('');
+        setNewTaskSection('');
         setSelectedColumn('todo');
         setShowAddTaskModal(false);
     };
@@ -917,6 +919,35 @@ export default function DynamicProjectPage() {
                                 if (e.key === 'Enter') {
                                     handleAddTask();
                                 }
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{
+                            display: 'block',
+                            color: '#495B69',
+                            marginBottom: '0.5rem',
+                            fontSize: '1rem',
+                            fontWeight: '500'
+                        }}>
+                            Section
+                        </label>
+                        <input
+                            type="text"
+                            value={newTaskSection}
+                            onChange={(e) => setNewTaskSection(e.target.value.toUpperCase())}
+                            placeholder="Enter section name (e.g., FRONTEND, BACKEND, DATABASE)"
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #e9ecef',
+                                fontSize: '1rem',
+                                color: '#495B69',
+                                backgroundColor: '#F8F8F8',
+                                boxSizing: 'border-box',
+                                textTransform: 'uppercase'
                             }}
                         />
                     </div>
