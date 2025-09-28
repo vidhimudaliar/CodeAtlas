@@ -14,9 +14,10 @@ interface Project {
 
 export default function Dashboard() {
     const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showProjectForm, setShowProjectForm] = useState(false);
+    const [showGitHubConnect, setShowGitHubConnect] = useState(true); // show button initially
 
     useEffect(() => {
         fetchProjects();
@@ -42,14 +43,56 @@ export default function Dashboard() {
         }
     };
 
+    const handleGitHubConnected = () => {
+        setShowGitHubConnect(false); // hide button
+        fetchProjects(); // now fetch projects
+    };
+
+    
+    if (showGitHubConnect) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '60vh',
+                textAlign: 'center',
+                padding: '2rem'
+            }}>
+                <h1 style={{ color: '#495B69', marginBottom: '1rem', fontSize: '2rem', fontWeight: 600 }}>
+                    Welcome to CodeAtlas
+                </h1>
+                <ConnectGitHubButton />
+                <p style={{ color: '#6c757d', marginBottom: '2rem', fontSize: '1.1rem', maxWidth: '500px', lineHeight: 1.6 }}>
+                    Connect your GitHub account to start managing your projects and contributions.
+                </p>
+                   
+               
+        </div>
+        );
+    }
+
+    // Show loading state if projects are being fetched
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '50vh'
+            }}>
+                <p style={{ color: '#6c757d' }}>Loading projects...</p>
+            </div>
+        );
+    }
+
+    // Show dashboard once projects are loaded
     return (
         <>
-            <h1 style={{
-                color: '#495B69',
-                marginBottom: '1.5rem',
-                fontSize: '1.75rem',
-                fontWeight: '600'
-            }}>Dashboard</h1>
+            <h1 style={{ color: '#495B69', marginBottom: '1.5rem', fontSize: '1.75rem', fontWeight: 600 }}>
+                Dashboard
+            </h1>
 
             {/* Main Cards */}
             <div style={{
