@@ -7,7 +7,7 @@ const supabaseAdmin = createClient(
 );
 
 export async function GET(req: NextRequest, { params }: { params: { projectName: string } }) {
-  const repo = "desi-discipline";
+  const repo = "deepvisor";
 
   const ownerUserId = req.nextUrl.searchParams.get("ownerUserId");
   const ownerParam = req.nextUrl.searchParams.get("owner");

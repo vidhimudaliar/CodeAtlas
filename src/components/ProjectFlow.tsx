@@ -53,7 +53,7 @@ export default function ProjectFlow({
                 const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
                     mappedNodes,
                     mappedEdges,
-                    'LR'
+                    'TB'
                 );
 
                 setNodes(layoutedNodes);
