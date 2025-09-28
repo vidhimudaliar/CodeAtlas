@@ -1,7 +1,7 @@
 "use client";
 import { StatsGroup } from "@/components/StatsGroup";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 
@@ -11,6 +11,8 @@ export default function DynamicProjectPage() {
     const [activeTab, setActiveTab] = useState('board');
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [selectedSubtask, setSelectedSubtask] = useState<any>(null);
+    const [stats, setStats] = useState({ tasksDone: 0, tasksAssigned: 0, numberCommits: 0 });
+    const [statsLoading, setStatsLoading] = useState(true);
 
     const tabs = [
         { id: 'summary', label: 'Summary', icon: 'summary-icon.svg', iconBold: 'summary-icon-bold.svg' },
@@ -18,6 +20,36 @@ export default function DynamicProjectPage() {
         { id: 'overview', label: 'Overview', icon: 'overview-icon.svg', iconBold: 'overview-icon-bold.svg' },
         { id: 'code', label: 'Code', icon: 'code-icon.svg', iconBold: 'code-icon-bold.svg' }
     ];
+
+    // Fetch stats when component mounts
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setStatsLoading(true);
+                console.log('Fetching stats for project:', projectName);
+                const url = `/api/stats?projectId=${projectName}`;
+                console.log('API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Stats data received:', data);
+                    setStats(data);
+                } else {
+                    const errorText = await response.text();
+                    console.error('Failed to fetch stats:', response.status, errorText);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, [projectName]);
 
     const kanbanData = {
         todo: [
@@ -1049,11 +1081,17 @@ export default function DynamicProjectPage() {
             {activeTab === 'summary' && (
                 <div style={{ padding: '2rem 0', color: '#495B69' }}>
                     <p>Summary content will go here</p>
-                    <StatsGroup 
-      tasksDone={12} 
-      tasksAssigned={20} 
-      numberCommits={35} 
-    />
+                    {statsLoading ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>
+                            Loading stats...
+                        </div>
+                    ) : (
+                        <StatsGroup 
+                            tasksDone={stats.tasksDone} 
+                            tasksAssigned={stats.tasksAssigned} 
+                            numberCommits={stats.numberCommits} 
+                        />
+                    )}
                 </div>
             )}
             {activeTab === 'overview' && (
