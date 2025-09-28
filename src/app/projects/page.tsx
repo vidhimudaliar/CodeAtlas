@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Projects() {
+    const router = useRouter();
+    
     const projects = [
         {
             name: 'Shellhacks',
@@ -97,7 +100,7 @@ export default function Projects() {
                     }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        onClick={() => window.location.href = `/projects/${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}`}
+                         onClick={() => router.push(`/projects/${project.name.toLowerCase().replace(/[^a-z0-9]/g, '')}`)}
                     >
                         {/* Left side - Icon and project name */}
                         <div style={{
