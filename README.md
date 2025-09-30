@@ -14,7 +14,7 @@ https://devpost.com/software/codeatlas
 Quick demo: [Watch on Loom](https://www.loom.com/share/088c442123af41ea960082b175d372f9?sid=bfed1b06-f595-47c2-884a-ffa2982d487b)
 <div>
     <a href="https://www.loom.com/share/088c442123af41ea960082b175d372f9">
-      <p>Create Next App - 30 September 2025 - Watch Video</p>
+      <p>Watch demo on Loom</p>
     </a>
     <a href="https://www.loom.com/share/088c442123af41ea960082b175d372f9">
       <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/088c442123af41ea960082b175d372f9-59ad2968af687cc9-full-play.gif">
