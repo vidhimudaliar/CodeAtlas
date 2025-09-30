@@ -1,3 +1,6 @@
+# DevPost
+https://devpost.com/software/codeatlas
+
 # CodeAtlas 🚀  
 *Your AI Project Manager for Developers & Small Businesses*  
 
