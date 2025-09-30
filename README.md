@@ -41,4 +41,4 @@ With CodeAtlas, you get a lightweight AI assistant that simplifies project manag
 ```bash
 git clone https://github.com/your-username/codeatlas.git
 cd codeatlas
-
+```
