@@ -1,44 +1,74 @@
+
 # DevPost
 https://devpost.com/software/codeatlas
 
 # CodeAtlas 🚀  
-*Your AI Project Manager for Developers & Small Businesses*  
+*Your AI Project Manager for Developers & Small Businesses*
 
-## 🌟 Overview  
-Welcome to **CodeAtlas** – an intelligent AI-powered project manager designed to help developers and small businesses plan, track, and complete their projects efficiently.  
-
-CodeAtlas takes in your **project idea** and **tech stack**, then automatically:  
-- Generates a **personalized project checklist**   
-- Updates your progress seamlessly  
-- Provides **actionable insights** to keep you on track
-- Visualizes progress using Flow with nodes and edges you can trasverse through 
-
-With CodeAtlas, you get a lightweight AI assistant that simplifies project management without the overhead of traditional tools.  
+## 🌟 Overview
+**CodeAtlas** converts a messy codebase into a clear visual roadmap. It analyzes repositories, extracts tasks & subtasks, and maps them so contributors and devs can see exactly what to do next — no onboarding required.
 
 ---
 
-## ✨ Features  
-- 📝 **Smart Project Setup** – Input your idea + tech stack → get a structured roadmap.  
-- 📋 **AI-Generated Checklist** – Automatically breaks down projects into clear, actionable tasks.  
-- 🔄 **Repository Tracking** – Syncs with your GitHub repository to mark progress.  
-- 📊 **Progress Dashboard** – Visualize milestones and completion status.  
-- 🤝 **Collaboration Ready** – Works for solo developers and small teams.  
+## 🎬 Demo
+Quick demo: [Watch on Loom](https://www.loom.com/share/088c442123af41ea960082b175d372f9?sid=bfed1b06-f595-47c2-884a-ffa2982d487b)
+
 
 ---
 
-## 🛠️ Tech Stack  
-- **Frontend:** React, CSS
-- **Backend:** Next.js (API routes)  
-- **Database:** Supabase (PostgreSQL)
-- **Authentication:** Github OAuth 
-- **AI Agent:** Google Agent Development kit, Google Gemini API 
+## ✨ Features
+
+* 🗺️ **Visual Task Maps** — Auto-generated nodes & edges show relationships between tasks.
+* 🧭 **Actionable Roadmaps** — Breaks projects into tasks & subtasks developers can pick up immediately.
+* 🔁 **Repo Sync** — GitHub webhooks + repo analysis to keep tasks up-to-date.
+* 🤖 **Smart Analysis** — AI analyzes commits, PRs, and file changes to infer context.
+* 📈 **Progress Dashboard** — See completion and bottlenecks at a glance.
 
 ---
 
-## 🚀 Getting Started  
+## 🛠️ Tech Stack
 
-### 1️⃣ Clone the Repo  
+* **Frontend:** React, CSS
+* **Backend:** Next.js (API routes) + FastAPI worker
+* **Database:** Supabase (Postgres)
+* **Auth:** GitHub OAuth
+* **AI:** Google Agent Development Kit + Google Gemini API
+
+---
+
+## 🚀 How it works
+
+1. GitHub webhooks send repo events to a FastAPI worker.
+2. A Google Gemini agent analyzes code changes, commit messages, and file structure.
+3. Results are stored in Supabase as nodes/edges (tasks & relations).
+4. Frontend renders an interactive task map and progress dashboard.
+
+---
+
+## ⚠️ Challenges & Solutions
+
+* **Server communication:** hardened API pipelines between Next.js and the ADK worker.
+* **Flexible schema:** nodes/edges/relations model to support different project structures.
+* **AI reliability:** iterative prompt engineering + schema validation to ensure structured outputs.
+
+---
+
+## 🧭 Getting started
+
 ```bash
 git clone https://github.com/your-username/codeatlas.git
 cd codeatlas
+# configure .env: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, GITHUB_CLIENT_ID, GEMINI_API_KEY, etc.
+npm install
+npm run dev
 ```
+
+---
+
+## ✉️ Contact
+
+DM via GitHub or email.
+
+```
+```
+
