@@ -1,9 +1,8 @@
-
-# DevPost
-https://devpost.com/software/codeatlas
-
 # CodeAtlas 🚀  
 *Your AI Project Manager for Developers & Small Businesses*
+
+## 💻 DevPost
+https://devpost.com/software/codeatlas
 
 ## 🌟 Overview
 **CodeAtlas** converts a messy codebase into a clear visual roadmap. It analyzes repositories, extracts tasks & subtasks, and maps them so contributors and devs can see exactly what to do next — no onboarding required.
@@ -11,13 +10,9 @@ https://devpost.com/software/codeatlas
 ---
 
 ## 🎬 Demo
-Quick demo: [Watch on Loom](https://www.loom.com/share/088c442123af41ea960082b175d372f9?sid=bfed1b06-f595-47c2-884a-ffa2982d487b)
 <div>
-    <a href="https://www.loom.com/share/088c442123af41ea960082b175d372f9">
-      <p>Watch demo on Loom</p>
-    </a>
-    <a href="https://www.loom.com/share/088c442123af41ea960082b175d372f9">
-      <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/088c442123af41ea960082b175d372f9-59ad2968af687cc9-full-play.gif">
+    <a href="http://youtube.com/watch?v=dBJuZoSDHIM">
+      <p>Watch demo on Youtube</p>
     </a>
   </div>
 
@@ -71,11 +66,4 @@ npm run dev
 ```
 
 ---
-
-## ✉️ Contact
-
-DM via GitHub or email.
-
-```
-```
 
